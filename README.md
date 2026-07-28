@@ -1,172 +1,182 @@
-# KUHUL WebX-3D  ·  v3.5.0
+# NNC-K
 
-> Canonical open-source release of the KUHUL ML Micronaut + Supernaut geometric compute system.
+NNC-K is a contract-driven neural meta-runtime that joins Neural Net Code,
+K'UHUL symbolic execution, Micronaut actors, local or provider-backed models,
+persistent execution traces, and DirectX GPU sidecars. It is designed to make
+models and capabilities modular, inspectable, and governable rather than
+binding the application to one model or one inference backend.
 
----
+## Start Here
 
-## Quick Start
+Requirements: Windows 10+, PowerShell 7, Node.js 14+, npm, and Python.
 
-```bat
-START.bat
+```powershell
+git clone https://github.com/cannaseedus-bot/WebX.git
+cd WebX
+npm install
+python -m pip install -r requirements.txt
+Expand-Archive .\bin\windows-binaries.zip -DestinationPath . -Force
+pwsh -NoProfile -File .\micronaut-ui.ps1
 ```
 
-Opens the landing page at `http://127.0.0.1:7430` and the trainer bridge at `http://127.0.0.1:7431`.
+The ZIP must be extracted at the repository root because it already contains
+the `bin\` layout. See [install.md](install.md) for complete setup notes and
+[micronaut-ui.md](micronaut-ui.md) for the desktop UI.
 
-Requires **Node.js** (any modern version).
+## System Model
 
----
-
-## What's Inside
-
-### App Shell (`index.html`)
-
-- **Top bar** — KUHUL logo (far left), nav links, version badge, server status dot, user widget (right)
-- **Left sidebar** — collapsible sections: Demos · JS Examples · Source · Docs · Registry
-- **Content area** — iframe for live demos, markdown renderer for docs, JSON viewer for registry files
-- **SVG-3D splash** — live K'uhul 7-brain canvas animation on the home page (uses `src/svg3d.js` projection math)
-- **Hash routing** — `#app`, `#trainer`, `#demo:<name>`, `#doc:<name>`
-
-### 3D Runtime (`src/index.html`)
-
-Open via **`⟁ Launch 3D App`** or `http://127.0.0.1:7430/app`
-
-- 3D perspective canvas — 7 brain organs, BRAIN_EDGES, field particles, orbit drag, scroll-to-zoom
-- **3-tab left panel**: K3D compiler · Train · Fields
-- **Train tab** — 7 training modes with mode-aware config fields and live SSE loss canvas
-- **Right panel** — 7 brain mini-renderers (one per brain organ)
-- **8-phase K'ayab' runtime** — pip ring, auto-advance, phase label
-
-### Training Modes (`native/trainer-server.cjs`)
-
-| Mode | Engine | Micronaut |
-|---|---|---|
-| Causal GPU | `gpt2_trainer.exe` D3D11 | Coder pretrain |
-| Shard Chain | `.exe` + `--shard` DDS | Large datasets |
-| Tool-Call CPU | `finetune_toolcall_pt.py` | TC-1/TC-2, agent |
-| Curriculum CPU | PyTorch easy→hard | Math micronaut |
-| Glyph Pretrain | PyTorch KXML prefix | Kuhul/KXML |
-| Fiber Chain | Multi-chunk orchestrated | Any large domain |
-| **Hybrid iGPU→CPU** | `hybrid_math_micronaut.py` | **Math · Coder** |
-
-The **Hybrid** mode runs `[Sek]` D3D11 iGPU pretrain → `[Ch'en]` CPU finetune with geodesic+ARC attention from `E:\models\GPT2\geodesic_cache\`.
-
-### Domain JSONL Generator (`E:\models\GPT2\build_domain_jsonl.py`)
-
-```bat
-python E:\models\GPT2\build_domain_jsonl.py --domain all --n 200 --out domain_train.jsonl
+```text
+UI / HTTP / MCP / WebX
+          |
+schemas, contracts, manifests, registries
+          |
+K'UHUL phases + NeuralGrammar.Core
+          |
+Micronauts, skills, workers, and model routing
+          |
+Python inference | local/cloud adapters | D3D11 GPU sidecars
+          |
+traces, chats, learned Micronauts, and validation evidence
 ```
 
-Generates KXML-prefixed training records across 5 domains:
-`powershell` · `coder` · `math` · `agent` · `kuhul`
+NNC-K separates responsibilities:
 
-PowerShell domain includes full error→retry cycles (bash fallback, python fallback, corrected cmdlet).
+- manifests and schemas declare legal structure;
+- K'UHUL defines symbolic phase execution;
+- Micronauts expose bounded, addressable capabilities;
+- models produce candidate inference outputs;
+- native sidecars perform compute-only GPU work;
+- runtime managers validate, persist, refine, and promote state.
 
----
+Read [NNC-K.md](NNC-K.md) for the architecture and system boundaries.
 
-## File Map
+## K'UHUL Execution
 
-```
-v3.5.0-WebX/
-├── START.bat                   ← launch everything
-├── index.html                  ← landing page shell (SVG-3D splash + sidebar + nav)
-├── server.cjs                  ← static file server port 7430 (COOP/COEP for SAB)
-├── server.manifest.json        ← server config, routes, env
-├── cache.manifest.json         ← static asset inventory + cache policy
-│
-├── src/
-│   ├── index.html              ← 3D runtime app (open via /app)
-│   ├── index.js                ← 172 exports — full library surface
-│   ├── d12webx.js              ← SharedArrayBuffer GPU substrate
-│   ├── mind-binder.js          ← 8-phase K++ unified runtime
-│   ├── svg3d.js                ← SVG-3D tensor serialization
-│   ├── geometric-operators.js  ← 7 geometric ops (⊗ ⊕ ⊖ ⊛ ⊜ ⊝ ⊞)
-│   ├── field-system.js         ← π_field_v1 physics (4 field types)
-│   └── k3d/compiler.js         ← K3D source → IR JSON
-│
-├── native/
-│   ├── trainer-server.cjs      ← HTTP+SSE trainer bridge port 7431
-│   ├── bin/
-│   │   ├── gpt2_trainer.exe    ← D3D11 iGPU trainer (HD 4600 confirmed)
-│   │   ├── cso/                ← 17 compiled DXBC shaders
-│   │   └── tokens_*.bin        ← token datasets
-│   ├── shaders/                ← 29 HLSL/WGSL source shaders
-│   └── klsl/                   ← KLSL compiler (C++ source + examples)
-│
-├── tools/trainers/
-│   ├── hybrid_math_micronaut.py    ← [Pop][Sek][Ch'en][Xul] pipeline
-│   ├── finetune_toolcall_pt.py     ← PyTorch CPU finetune (geodesic attn)
-│   ├── geodesic_attention_bridge.py← sphere projection + ARC weights
-│   └── hybrid_train.py             ← generic hybrid orchestrator
-│
-├── examples/                   ← 11 standalone HTML demos
-├── docs/                       ← 14 markdown docs
-├── kuhul/                      ← K'UHUL++ compiler, runtime, stdlib
-├── shaders/                    ← top-level HLSL shaders
-└── registry/
-    └── micronauts.registry.json← model manifest (TC-1/TC-2/MM-1/CM-1)
+The common phase lifecycle is:
+
+```text
+Pop -> Wo -> Yax -> Sek -> Ch'en -> Xul
 ```
 
----
+It establishes context, transforms and resolves state, executes a bounded
+action, persists an admitted result, and closes the cycle. Language sources,
+compiler stages, runtime code, tests, and examples live under `kuhul/`.
 
-## Key APIs
+## Hot-Swappable `.xshard` Models
 
-```js
-import { D12WebX, MindBinder, encodeToSVG, decodeFromSVG } from './src/index.js';
+NNC-K can convert GGUF or Safetensors data and generated activations into
+`.xshard` tiles. The native D3D11 sidecars stream compatible tiles through a
+fixed GPU window, allowing users to assemble model-specific attention and MoE
+lanes without loading every parameter at once.
 
-// GPU buffer
-const gpu    = new D12WebX();
-const buffer = gpu.createBuffer(65536);
+| Class | GPU policy |
+| --- | --- |
+| attention | Hot-swappable when payload is at most 2 GB |
+| expert | Swappable cold lane; split oversized expert tiles |
+| embedding | Load once rather than swapping per prompt |
+| generic | Route according to declared use and size |
 
-// 8-phase geometric runtime
-const binder = new MindBinder();
-binder.beginPhase(0);
-const T = binder.allocateTensor(1024 * 3);
-binder.writeTensor(T, pointCloud);
-binder.endPhase();
-await binder.executeAllPhases();
+`asx_ram_v2.exe` executes Q/K/V attention and validates it against a CPU
+reference. `asx_gemm.exe` executes selected MoE expert tiles. Both are
+compute-only; neither creates or promotes Micronauts.
 
-// SVG-3D round-trip
-const svg    = binder.serializeToSVG(T, { edges });
-const { points, phases } = decodeFromSVG(svg);
+The current implementation uses D3D11 compute and `cs_5_0` HLSL for older
+iGPU compatibility. D3D11/D3D11_1 resource limits, typed SRV/UAV rules,
+explicit unbinding, staging readback, numerical stability, and the practical
+2 GB swap window shape the shard contract. See
+[ASX RAM Attention](docs/asx-ram-attention.md) and
+[GPT-OSS Shard Bridge](docs/gpt-oss-shard-bridge.md).
+
+### GEMM, OpenCL CPU, and model selection
+
+The development host has Intel's LLVM-based OpenCL CPU driver components,
+including a Clang OpenCL compiler, CPU backend, task executor, and OpenCL ICD.
+NNC-K currently generates OpenCL C 1.2 kernels, but it does not yet load and
+dispatch them through a native OpenCL context. Until that adapter is admitted
+and validated, the C# training pipeline reports a managed CPU fallback.
+
+GEMM is the matrix operation `C = alpha * A * B + beta * C`. NNC-K's
+`asx_gemm.exe` is a specialized D3D11 sidecar for selected MoE expert
+`.xshard` matrices; it is not yet a complete BLAS GEMM implementation. The
+planned OpenCL backend can provide a CPU-dispatched GEMM lane after native
+dispatch and CPU-reference conformance are implemented.
+
+Gemma is a separate model family. Local Gemma GGUF models are downloaded from
+Hugging Face rather than stored in this repository. Verified repositories:
+
+- `lmstudio-community/gemma-3-4b-it-GGUF`
+- `lmstudio-community/gemma-4-E2B-it-GGUF`
+- `lmstudio-community/gemma-3-1B-it-qat-GGUF`
+
+See [NNC-K System Guide](NNC-K.md#gemma-model-family) for download commands.
+The runtime can route to Gemma, GPT-OSS, Qwen, DeepSeek, or another registered
+model; model selection does not replace CPU/GPU orchestration.
+
+Generate synthetic activation shards:
+
+```powershell
+py.exe scripts\generate_xshard.py .learning\xshard_samples\st_test
 ```
 
----
+Run them after extracting the binary archive:
 
-## Screenshots
+```powershell
+.\bin\asx_ram_v2.exe `
+  .learning\xshard_samples\st_test\layer_00_q.xshard `
+  .learning\xshard_samples\st_test\layer_00_k.xshard `
+  .learning\xshard_samples\st_test\layer_00_v.xshard `
+  .learning\xshard_samples\st_test\model_config.json 1 --prefetch
+```
 
-### Landing Page — SVG-3D Splash
-![Landing page with live 7-brain SVG-3D animation, sidebar navigation, and KUHUL top bar](docs/screenshots/landing.png)
+## Repository Map
 
-### MX2LM DirectWrite GPU — Orbital Halo
-![MX2LM DirectWrite GPU demo: Orbital Halo attention ring compute with 12 heads across 3 rings](docs/screenshots/mx2lm-orbital.png)
+| Path | Role |
+| --- | --- |
+| `src/` | JavaScript runtime and public API |
+| `src/NeuralGrammar.Core/` | C# grammar, validation, routing, and memory |
+| `kuhul/`, `compiler/` | K'UHUL language, compiler, IR, runtime, and tests |
+| `scripts/`, `tools/` | Model servers, shard converters, trainers, validators |
+| `native/`, `shaders/` | Native runtimes and HLSL/WGSL compute |
+| `bin/Quantum/src/` | Quantum, attention, and expert sidecar sources |
+| `schemas/`, `contracts/` | Executable data contracts and examples |
+| `registry/`, `*.manifest.json` | Models, agents, tools, routes, and services |
+| `skills/` | Deterministic skill/action packages |
+| `tests/`, `src/__tests__/`, `kuhul/tests/` | .NET and Jest test surfaces |
+| `.learning/` | Local chats, traces, Micronauts, shards, and runtime state |
 
-### MX2LM DirectWrite GPU — Full Dashboard
-![Stack Grid (12 layers), Tunnel Rail (token stream 1448 queue), HUD Ring monitor at cycle 2031](docs/screenshots/mx2lm-dashboard.png)
+## Development
 
-### Neural Inference Demo
-![K'UHUL++ Neural Inference Demo: input/hidden layer/output probabilities running in the app shell](docs/screenshots/neural-inference.png)
+```powershell
+npm run build
+npm test
+npm run doctor
+```
 
-### Geometric Substrate Demo
-![D12WebX Geometric Execution Substrate: tensor embedding in manifold M, SharedArrayBuffer arena, geometric operators panel](docs/screenshots/geometric-substrate.png)
+Jest writes coverage to `coverage/`. Native, .NET, and Python components have
+component-specific build and validation commands; consult their local project
+files and the documents under `docs/`.
 
-> Screenshots taken at v3.5.0 on Intel HD Graphics 4600 (D3D11 feature level 45312)
+The legacy root `run.ps1` and `quick.ps1` reference module files that are not
+present in this checkout. They are not the recommended clean-checkout entry
+points.
 
----
+## Documentation
 
-## Micronaut Models
+- [Installation](install.md)
+- [Micronaut UI](micronaut-ui.md)
+- [NNC-K System Guide](NNC-K.md)
+- [K'UHUL documentation](kuhul/docs/)
+- [NNC-K inference](docs/nnc-k-inference.md)
+- [ASX RAM attention](docs/asx-ram-attention.md)
+- [GPT-OSS shard bridge](docs/gpt-oss-shard-bridge.md)
+- [Contributor guidelines](AGENTS.md)
 
-See `registry/micronauts.registry.json` for the full model map.
+## Status and Scope
 
-| ID | Role | Best checkpoint |
-|---|---|---|
-| TC-1 | Base tool-caller (small) | `gpt2_small_ft_toolcall_fixed.safetensors` |
-| TC-2 | Base tool-caller (medium) | `gpt2_medium_ft_toolcall.safetensors` |
-| MM-1 | Math specialist | `math_micronaut/gpt2_medium_toolcall_s1500.safetensors` |
-| CM-1 | Coder specialist | `coder_micronaut/dx11/model.safetensors` |
-| GW-1 | Geodesic cache | `geodesic_cache/*.npy` (50257 sphere positions, k=32 kNN) |
+The repository combines mature components, experimental paths, release
+snapshots, and machine-local examples. Claims in this README are limited to
+surfaces backed by current source or documentation. A manifest describes an
+intended contract; verify that its entrypoint exists before treating the
+service as deployable.
 
----
-
-## Release Lineage
-
-See `CHANGELOG.md` for the full history from `v0.1.0-igpu-trainer` through `v3.5.0-WebX`.
+Licensed under MIT. See `license.md`.
