@@ -1,0 +1,102 @@
+{
+  "kuhul": "2.0.0",
+  "type": "node_population",
+  "meta": {
+    "name": "Research Domain Node Population",
+    "version": "1.0.0",
+    "description": "Semantic @nodes used by the RESEARCH domain. Demonstrates that ELIZA-style mechanics are node-level, not domain-level.",
+    "conformance_version": "2.0.0"
+  },
+  "nodes": [
+    {
+      "id": "research_hypothesis",
+      "name": "hypothesis",
+      "pattern": "\\b(claim|propose|argue|hypothesis|thesis|conjecture|predict)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Yax",
+      "tags": ["research", "evidence"],
+      "intent": "hypothesis_probe",
+      "response_templates": [
+        "What is the core claim you are evaluating?",
+        "What would count as a test of (0)?",
+        "Is the hypothesis falsifiable?"
+      ],
+      "relations": [
+        ["{match}", "is", "hypothesis"],
+        ["hypothesis", "requires", "test"]
+      ]
+    },
+    {
+      "id": "research_evidence",
+      "name": "evidence",
+      "pattern": "\\b(source|reference|study|paper|experiment|survey|dataset|finding|result)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Pop",
+      "tags": ["research", "evidence"],
+      "intent": "evidence_request",
+      "response_templates": [
+        "What source supports (0)?",
+        "How was the evidence gathered and reviewed?",
+        "Is the evidence primary or secondary?"
+      ],
+      "relations": [
+        ["{match}", "is", "evidence"],
+        ["evidence", "supports_or_weakens", "claim"]
+      ]
+    },
+    {
+      "id": "research_comparison",
+      "name": "comparison",
+      "pattern": "\\b(compare|contrast|versus|similar|different|better|worse|alternative|trade-off)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Yax",
+      "tags": ["research", "evidence"],
+      "intent": "comparison_probe",
+      "response_templates": [
+        "What dimensions should be compared?",
+        "What is the control or baseline for (0)?",
+        "Are the alternatives measured on the same scale?"
+      ],
+      "relations": [
+        ["{match}", "initiates", "comparison"],
+        ["comparison", "needs", "criteria"]
+      ]
+    },
+    {
+      "id": "research_contradiction",
+      "name": "contradiction",
+      "pattern": "\\b(conflict|contradict|disagree|inconsistent|refute|debunk|replication failed)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Ch'en",
+      "tags": ["research", "evidence"],
+      "intent": "contradiction_probe",
+      "response_templates": [
+        "What exactly contradicts (0)?",
+        "Do the contradictions differ in methodology or data?",
+        "Which side has the stronger evidence?"
+      ],
+      "relations": [
+        ["{match}", "indicates", "contradiction"],
+        ["contradiction", "requires", "resolution"]
+      ]
+    },
+    {
+      "id": "research_uncertainty",
+      "name": "uncertainty",
+      "pattern": "\\b(uncertain|unclear|ambiguous|preliminary|limited data|needs more research|confidence interval)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Ch'en",
+      "tags": ["research", "evidence"],
+      "intent": "uncertainty_probe",
+      "response_templates": [
+        "What is the confidence level for (0)?",
+        "What additional evidence would reduce uncertainty?",
+        "How should the uncertainty be communicated?"
+      ],
+      "relations": [
+        ["{match}", "indicates", "uncertainty"],
+        ["uncertainty", "limits", "conclusion"]
+      ]
+    }
+  ]
+}

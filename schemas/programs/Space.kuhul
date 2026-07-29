@@ -1,0 +1,157 @@
+{
+  "kuhul": "2.0.0",
+  "folds": [
+    {
+      "name": "Pop",
+      "nodes": [
+        {
+          "value": "astrophysics",
+          "type": "literal"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Wo",
+      "nodes": [
+        {
+          "value": {
+            "value": "astrophysics",
+            "type": "literal"
+          },
+          "target": "domain",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "value": {
+              "planetary-science-facts-µ": 0.2,
+              "cosmic-distance-facts-µ": 0.2,
+              "black-hole-µ": 0.2,
+              "black-hole-facts-µ": 0.2,
+              "stellar-evolution-facts-µ": 0.2
+            },
+            "type": "literal"
+          },
+          "target": "mixture",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "value": {
+              "evidence": [],
+              "relations": [],
+              "notation": []
+            },
+            "type": "literal"
+          },
+          "target": "state",
+          "type": "assign"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Yax",
+      "nodes": [
+        {
+          "name": "state.notation",
+          "type": "ref"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Sek",
+      "nodes": [
+        {
+          "value": {
+            "name": "planetary-science-facts-µ",
+            "type": "ref"
+          },
+          "target": "note_planetary-science-facts",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "name": "cosmic-distance-facts-µ",
+            "type": "ref"
+          },
+          "target": "note_cosmic-distance-facts",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "name": "black-hole-µ",
+            "type": "ref"
+          },
+          "target": "note_black-hole",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "name": "black-hole-facts-µ",
+            "type": "ref"
+          },
+          "target": "note_black-hole-facts",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "name": "stellar-evolution-facts-µ",
+            "type": "ref"
+          },
+          "target": "note_stellar-evolution-facts",
+          "type": "assign"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Ch'en",
+      "nodes": [
+        {
+          "value": {
+            "value": {
+              "contributions": "state.evidence",
+              "domain": "astrophysics"
+            },
+            "type": "literal"
+          },
+          "type": "emit"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Xul",
+      "nodes": [
+        {
+          "name": "collapse",
+          "args": [
+            {
+              "value": "astrophysics",
+              "type": "literal"
+            }
+          ],
+          "type": "call"
+        }
+      ],
+      "type": "fold"
+    }
+  ],
+  "type": "program",
+  "meta": {
+    "name": "astrophysics Domain Program",
+    "version": "1.0.0",
+    "conformance_version": "2.0.0",
+    "description": "Auto-generated domain program for astrophysics micronauts",
+    "required_micronauts": [
+      "planetary-science-facts-µ",
+      "cosmic-distance-facts-µ",
+      "black-hole-µ",
+      "black-hole-facts-µ",
+      "stellar-evolution-facts-µ"
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+// Micronaut UI Design Reference
+// Layout: sidebar (240px) + chat area
+//
+// ┌────────────┬──────────────────────────────────────────┐
+// │  SIDEBAR   │            CHAT AREA                     │
+// │  (240px)   │                                          │
+// │            │  ┌────────────────────────────────────┐  │
+// │ 📁 PROJECTS│  │ [=] Supernaut v9  [P]  [Phase]    │  │
+// │    +  <    │  └────────────────────────────────────┘  │
+// │            │                                          │
+// │  project   │  ┌────────────────────────────────────┐  │
+// │  list      │  │  conversation feed                  │  │
+// │  (scroll)  │  │                                    │  │
+// │            │  └────────────────────────────────────┘  │
+// ├────────────┤                                          │
+// │ 🧬 REGISTER│  ┌────────────────────────────────────┐  │
+// │  ListBox   │  │ [Input box]              [Send]    │  │
+// │  (90px)    │  └────────────────────────────────────┘  │
+// ├────────────┤                                          │
+// │ [Wizard]   │                                          │
+// │ ┌────────┐ │                                          │
+// │ │Profile │ │                                          │
+// │ └────────┘ │                                          │
+// └────────────┴──────────────────────────────────────────┘
+//
+// Components (from PowerShell WPF x:Name bindings):
+//   SidebarPanel    — toggle visibility
+//   ProjectListPanel — StackPanel of project buttons
+//   RegisterList    — ListBox of micronaut nodes (phase icon, subject, capability)
+//   WizardBtn       — button to scaffold .kuhul → compile → register
+//   ProfileBox      — click to sign in via Google OAuth
+//   ProfileIcon     — circle with initial
+//   ProfileName     — display name or "Not signed in"
+//   ProfileStatus   — status line
+//   ChatTitleBar    — "Supernaut v9" or project name
+//   InputBox        — text input
+//   SendBtn         — send button
+//   FeedScroll      — scrollable conversation feed
+//   ModelStatus     — XCFE connection indicator
+//   PhasePanel      — phase manifold toggle area
+//   PhaseCanvas     — phase orbit visualization
+//
+// Commands:
+//   /help          — show command list
+//   /new           — new chat
+//   /clear         — clear terminal
+//   /phase         — toggle phase manifold
+//   /project <name> — switch active project
+//   /status        — show stats
+//   /skills        — list skills
+//   /agents        — list agents
+//   /tools         — toggle tool mode
+//   /model [name]  — show/switch active model
+//   /session [clear] — show/clear session cache
+//   /export        — export micronauts
+//   /merge         — merge similar micronauts
+//
+// Colors:
+//   Sidebar background: #161b22
+//   Header/Profile:     #0d1117
+//   Accent:             #58a6ff
+//   Text primary:       #e2e8f0
+//   Text secondary:     #8b949e
+//   Button primary:     #1f6feb
+//   List border:        #30363d
+//   Register bg:        #0d1117
+//
+// Models (from ModelBackend.RegisterLocalModels):
+//   gpt2               Tiny    124M   llama.cpp
+//   qwen-0.5b          Light   0.5B   llama.cpp
+//   lfm-2.5-1.2b       Base    1.2B   llama.cpp (default)
+//   gpt-oss-20b        Boss    20B    llama.cpp
+//   gemma4:cloud       Boss    ?      Ollama API
+//   deepseek-v4-pro:cloud Boss  ?      Ollama API
+//
+// C# types backing the UI:
+//   ModelBackend          — HybridSearch.cs   (tool calling, escalation, models)
+//   MicronautRegister     — FoldTensor.cs     (phase-indexed node registry)
+//   MicronautNotebook     — MicronautWizard.cs (notation storage)
+//   SemanticArtifactStore — SemanticArtifact.cs (artifact lifecycle)
+//   SessionCache          — SessionCache.cs    (bounded Pop working set)
+//   TaskPlanner           — TaskPlanner.cs     (objective decomposition)
+//   KuhulCompiledProgram  — Kast.cs            (.kprog executable graph)
+//   HybridSearch          — HybridSearch.cs    (lexical + semantic search)
+//
+// Fold phases displayed on the orbit:
+//   He (pre-Pop), Pop, Wo, Yax, Sek, Ch'en, Xul
+//
+// Phase icons in RegisterList:
+//   Pop  → 🔙 (return)
+//   Wo   → 🔗 (bind)
+//   Yax  → ✅ (validate)
+//   Sek  → ⚙️ (execute)
+//   Chen → 🔍 (inspect)
+//   Xul  → 💾 (persist)

@@ -1,0 +1,153 @@
+{
+  "kuhul": "1.0",
+  "type": "program",
+  "folds": [
+    {
+      "type": "fold",
+      "name": "Pop",
+      "nodes": [{ "type": "literal", "value": "semantic_page" }]
+    },
+    {
+      "type": "fold",
+      "name": "Wo",
+      "nodes": [
+        {
+          "type": "assign",
+          "target": "query",
+          "value": { "type": "ref", "name": "input.query" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Yax",
+      "nodes": [
+        {
+          "type": "call",
+          "name": "resolve_concepts",
+          "args": [{ "type": "ref", "name": "query" }]
+        },
+        {
+          "type": "assign",
+          "target": "concepts",
+          "value": { "type": "ref", "name": "concepts_output" }
+        },
+        {
+          "type": "call",
+          "name": "resolve_edges",
+          "args": [{ "type": "ref", "name": "concepts" }]
+        },
+        {
+          "type": "assign",
+          "target": "neighborhood",
+          "value": { "type": "ref", "name": "edges_output" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Sek",
+      "nodes": [
+        {
+          "type": "call",
+          "name": "score_relevance",
+          "args": [{ "type": "ref", "name": "neighborhood" }]
+        },
+        {
+          "type": "assign",
+          "target": "ranked",
+          "value": { "type": "ref", "name": "scored_output" }
+        },
+        {
+          "type": "if",
+          "test": {
+            "type": "op", "op": ">=",
+            "args": [
+              { "type": "ref", "name": "ranked.score" },
+              { "type": "literal", "value": 0.72 }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "admit",
+                "args": [
+                  { "type": "ref", "name": "ranked" }
+                ]
+              },
+              {
+                "type": "assign",
+                "target": "working_set",
+                "value": { "type": "ref", "name": "admitted" }
+              },
+              {
+                "type": "call",
+                "name": "mount",
+                "args": [
+                  { "type": "ref", "name": "working_set" },
+                  { "type": "ref", "name": "memory" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Ch'en",
+      "nodes": [
+        {
+          "type": "emit",
+          "value": { "type": "ref", "name": "memory.ready" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Xul",
+      "nodes": [
+        {
+          "type": "if",
+          "test": {
+            "type": "op", "op": ">=",
+            "args": [
+              { "type": "ref", "name": "memory.coverage" },
+              { "type": "literal", "value": 0.9 }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "execute",
+                "args": [
+                  { "type": "ref", "name": "inference" },
+                  { "type": "ref", "name": "memory" }
+                ]
+              }
+            ]
+          },
+          "else": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "expand",
+                "args": [{ "type": "ref", "name": "neighborhood" }]
+              },
+              {
+                "type": "call",
+                "name": "fold",
+                "args": [{ "type": "ref", "name": "semantic_page" }]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

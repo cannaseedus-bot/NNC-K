@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>KUHUL Boot</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070d;font-family:Consolas,monospace;color:#58a6ff}
+
+/* ---- Boot layers ---- */
+#bg-graph{position:absolute;top:50%;left:50%;transform:translate(-50%,-61%);opacity:0.24;pointer-events:none;z-index:0}
+#bg-graph svg{width:680px;height:680px;overflow:visible;animation:bgspin 24s linear infinite}
+@keyframes bgspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.bg-node{animation:nodepulse 3s infinite}
+@keyframes nodepulse{50%{filter:drop-shadow(0 0 18px cyan)}}
+.bg-line{stroke:#295b91;stroke-width:2;stroke-dasharray:10;opacity:0.5;animation:bgflow 2s linear infinite}
+@keyframes bgflow{from{stroke-dashoffset:20}to{stroke-dashoffset:0}}
+.bg-outer{animation:bgpulse 5s ease-in-out infinite}
+@keyframes bgpulse{0%,100%{filter:drop-shadow(0 0 12px #1da1ff)}50%{filter:drop-shadow(0 0 40px cyan)}}
+
+/* ---- Foreground graph ---- */
+#fg-graph{position:absolute;top:50%;left:50%;transform:translate(-50%,-58%);pointer-events:none;z-index:1}
+#fg-graph svg{width:540px;height:540px;overflow:visible;animation:fgspin 20s linear infinite reverse}
+@keyframes fgspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.fg-node{animation:fgnodepulse 2.5s infinite}
+@keyframes fgnodepulse{50%{filter:drop-shadow(0 0 20px currentColor)}}
+.fg-line{stroke:#3b7bb5;stroke-width:1.5;stroke-dasharray:6;opacity:0.4;animation:fgflow 1.5s linear infinite}
+@keyframes fgflow{from{stroke-dashoffset:12}to{stroke-dashoffset:0}}
+
+/* ---- Wordmark ---- */
+#wordmark{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-62%);z-index:2;
+    text-align:center;animation:fadeIn 2.8s ease-out
+}
+@keyframes fadeIn{
+    1%{opacity:0;transform:translate(-50%,-61%) scale(0.92)}
+    5%{opacity:0.1}
+    10%{opacity:0.2}
+    20%{opacity:0.3}
+    40%{opacity:0.4}
+    80%{opacity:0.5}
+    99%{opacity:0.6}
+    100%{opacity:1;transform:translate(-50%,-62%) scale(1)}
+}
+#wordmark .title{
+    font-size:86px;color:#58a6ff;letter-spacing:14px;
+    text-shadow:0 0 40px rgba(88,166,255,0.4),0 0 80px rgba(88,166,255,0.15);
+    font-weight:bold;line-height:1}
+#wordmark .subtitle{
+    font-size:17px;color:#6aa8ff;letter-spacing:5px;margin-top:6px;opacity:0.85;margin-bottom:120px;
+}
+
+/* ---- Console ---- */
+#console{
+    position:absolute;left:50%;bottom:28px;transform:translateX(-50%);
+    width:92%;height:170px;z-index:3;
+    background:#080c13;border:1px solid #1f3a5e;
+    box-shadow:0 0 20px rgba(0,100,255,0.12);
+    padding:10px 14px;overflow-y:auto;
+    font-size:13px;color:#52ff8d;text-align:left
+}
+.cursor{animation:blink .7s infinite}
+@keyframes blink{50%{opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- Background graph — behind the wordmark, 18% opacity -->
+<div id="bg-graph">
+<svg viewBox="0 0 400 400">
+<g class="bg-outer">
+<polygon points="200,20 340,100 340,300 200,380 60,300 60,100" fill="none" stroke="#58a6ff" stroke-width="5"/>
+</g>
+<g class="bg-orbit" style="transform-origin:200px 200px;animation:orbit 14s linear infinite">
+<circle class="bg-node" cx="200" cy="28" r="9" fill="#ff5fa2"/>
+<circle class="bg-node" cx="330" cy="108" r="9" fill="#4ec9ff"/>
+<circle class="bg-node" cx="330" cy="292" r="9" fill="#00ffaa"/>
+<circle class="bg-node" cx="200" cy="372" r="9" fill="#8b5cf6"/>
+<circle class="bg-node" cx="70" cy="292" r="9" fill="#ffc857"/>
+<circle class="bg-node" cx="70" cy="108" r="9" fill="#38f0ff"/>
+</g>
+<line class="bg-line" x1="200" y1="200" x2="200" y2="28"/>
+<line class="bg-line" x1="200" y1="200" x2="330" y2="108"/>
+<line class="bg-line" x1="200" y1="200" x2="330" y2="292"/>
+<line class="bg-line" x1="200" y1="200" x2="200" y2="372"/>
+<line class="bg-line" x1="200" y1="200" x2="70" y2="292"/>
+<line class="bg-line" x1="200" y1="200" x2="70" y2="108"/>
+</svg>
+</div>
+
+<!-- Foreground graph — bright nodes, slightly smaller, counter-rotating -->
+<div id="fg-graph">
+<svg viewBox="0 0 400 400">
+<g class="fg-orbit" style="transform-origin:200px 200px;animation:orbit 16s linear infinite reverse">
+<circle class="fg-node" cx="200" cy="40" r="6" fill="#ff5fa2" style="color:#ff5fa2"/>
+<circle class="fg-node" cx="320" cy="110" r="6" fill="#4ec9ff" style="color:#4ec9ff"/>
+<circle class="fg-node" cx="320" cy="290" r="6" fill="#00ffaa" style="color:#00ffaa"/>
+<circle class="fg-node" cx="200" cy="360" r="6" fill="#8b5cf6" style="color:#8b5cf6"/>
+<circle class="fg-node" cx="80" cy="290" r="6" fill="#ffc857" style="color:#ffc857"/>
+<circle class="fg-node" cx="80" cy="110" r="6" fill="#38f0ff" style="color:#38f0ff"/>
+</g>
+<line class="fg-line" x1="200" y1="200" x2="200" y2="40"/>
+<line class="fg-line" x1="200" y1="200" x2="320" y2="110"/>
+<line class="fg-line" x1="200" y1="200" x2="320" y2="290"/>
+<line class="fg-line" x1="200" y1="200" x2="200" y2="360"/>
+<line class="fg-line" x1="200" y1="200" x2="80" y2="290"/>
+<line class="fg-line" x1="200" y1="200" x2="80" y2="110"/>
+<circle cx="200" cy="200" r="55" fill="none" stroke="#58a6ff" stroke-width="2.5" opacity="0.5"/>
+</svg>
+</div>
+
+<!-- Wordmark — fades in over 2.8s -->
+<div id="wordmark">
+<div class="title">KUHUL</div>
+<div class="subtitle">Semantic Kernel Runtime</div>
+</div>
+
+<!-- Boot console -->
+<div id="console"></div>
+
+<script>
+var lines=[
+"[00.002] Booting K'UHUL Runtime v1.0",
+"[00.011] Initializing Semantic Kernel...",
+"[00.026] Mounting SVG-3D Tensor Graph...",
+"[00.041] Pop ............. READY",
+"[00.056] Wo .............. READY",
+"[00.071] Yax ............. READY",
+"[00.086] Sek ............. READY",
+"[00.101] Ch'en ........... READY",
+"[00.116] Xul ............. READY",
+"[00.132] Registering Micronauts...",
+"[00.148] Memory-µ ........ READY",
+"[00.162] Planner-µ ....... READY",
+"[00.176] Search-µ ........ READY",
+"[00.191] XCFE ............ CONNECTED",
+"[00.205] Memory Nodes .... 38,412",
+"[00.221] Scheduler ....... ONLINE",
+"[00.238] Runtime ......... READY"
+];
+var i=0;
+var c=document.getElementById("console");
+function n(){
+    if(i>=lines.length)return;
+    c.innerHTML+=lines[i]+"<br>";
+    c.scrollTop=c.scrollHeight;
+    i++;
+    setTimeout(n,320);
+}
+n();
+setInterval(function(){
+    if(i>=lines.length){
+        c.innerHTML=c.innerHTML.replace(/<span class="cursor">_<\/span>/g,"");
+        c.innerHTML+='<span class="cursor">_</span>';
+    }
+},500);
+</script>
+</body>
+</html>

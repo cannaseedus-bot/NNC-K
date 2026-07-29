@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "xcfe://schema/node-contribution/v1",
+  "title": "NodeContribution",
+  "description": "Canonical envelope for one @node contribution inside a K'UHUL @fold. A Micronaut response is the accumulation of these contributions.",
+  "type": "object",
+  "required": ["id", "node_id", "node_name", "fold"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable identity of this contribution."
+    },
+    "node_id": {
+      "type": "string",
+      "description": "Owning @node id."
+    },
+    "node_name": {
+      "type": "string",
+      "description": "Human-readable node name, e.g. hypothesis, contradiction, evidence."
+    },
+    "fold": {
+      "type": "string",
+      "enum": ["Pop", "Wo", "Yax", "Sek", "Ch'en", "Xul"],
+      "description": "K'UHUL fold this contribution inhabits."
+    },
+    "neighborhood": {
+      "type": "string",
+      "description": "Semantic neighborhood, e.g. THOUGHT, FAMILY, EMOTION, SPACE."
+    },
+    "subject": {
+      "type": "string",
+      "description": "Micronaut subject this contribution is attached to."
+    },
+    "capability": {
+      "type": "string",
+      "description": "Capability tag for downstream grouping. Not a runtime authority."
+    },
+    "recognition": {
+      "type": "string",
+      "description": "What input pattern triggered this node."
+    },
+    "captures": {
+      "type": "object",
+      "description": "Named capture slots extracted from the input.",
+      "additionalProperties": { "type": "string" }
+    },
+    "relations": {
+      "type": "array",
+      "description": "Semantic relation triples asserted by this node.",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": { "type": "string" }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Evidence references (artifact ids, memory ids, facts).",
+      "items": { "type": "string" }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Confidence of this contribution."
+    },
+    "affect": {
+      "type": "object",
+      "description": "Optional computational affect state.",
+      "properties": {
+        "valence": { "type": "number" },
+        "arousal": { "type": "number" },
+        "curiosity": { "type": "number" },
+        "confidence": { "type": "number" },
+        "concern": { "type": "number" },
+        "frustration": { "type": "number" },
+        "skepticism": { "type": "number" },
+        "attachment": { "type": "number" }
+      }
+    },
+    "input_state": {
+      "type": "object",
+      "description": "Input state snapshot before this node fired."
+    },
+    "output_state": {
+      "type": "object",
+      "description": "Output state after this node fired."
+    },
+    "source": {
+      "type": "string",
+      "description": "Source label, e.g. node-engine, legacy-eliza, persona."
+    },
+    "provenance_hash": {
+      "type": "string",
+      "description": "Deterministic hash of node + match + input for replay verification."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp of contribution."
+    },
+    "text": {
+      "type": "string",
+      "description": "Default display text: the articulation produced by this node."
+    },
+    "intent": {
+      "type": "string",
+      "description": "Intent label, e.g. reflective_question, hypothesis_probe."
+    }
+  }
+}

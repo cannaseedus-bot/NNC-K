@@ -1,0 +1,180 @@
+{
+  "kuhul": "1.0",
+  "type": "program",
+  "folds": [
+    {
+      "type": "fold",
+      "name": "Pop",
+      "nodes": [{ "type": "literal", "value": "request_cycle" }]
+    },
+    {
+      "type": "fold",
+      "name": "Wo",
+      "nodes": [
+        {
+          "type": "assign",
+          "target": "request",
+          "value": { "type": "ref", "name": "input.prompt" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Yax",
+      "nodes": [
+        {
+          "type": "call",
+          "name": "classify",
+          "args": [
+            { "type": "ref", "name": "request" }
+          ]
+        },
+        {
+          "type": "assign",
+          "target": "intent",
+          "value": { "type": "ref", "name": "result" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Sek",
+      "nodes": [
+        {
+          "type": "if",
+          "test": {
+            "type": "op", "op": "==",
+            "args": [
+              { "type": "ref", "name": "intent" },
+              { "type": "literal", "value": "code" }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "invoke",
+                "args": [
+                  { "type": "ref", "name": "CODE-U" },
+                  { "type": "ref", "name": "request" }
+                ]
+              },
+              {
+                "type": "assign",
+                "target": "result",
+                "value": { "type": "ref", "name": "code_output" }
+              }
+            ]
+          }
+        },
+        {
+          "type": "if",
+          "test": {
+            "type": "op", "op": "==",
+            "args": [
+              { "type": "ref", "name": "intent" },
+              { "type": "literal", "value": "research" }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "invoke",
+                "args": [
+                  { "type": "ref", "name": "NET-U" },
+                  { "type": "ref", "name": "request" }
+                ]
+              },
+              {
+                "type": "assign",
+                "target": "result",
+                "value": { "type": "ref", "name": "net_output" }
+              }
+            ]
+          }
+        },
+        {
+          "type": "if",
+          "test": {
+            "type": "op", "op": "==",
+            "args": [
+              { "type": "ref", "name": "intent" },
+              { "type": "literal", "value": "reason" }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "invoke",
+                "args": [
+                  { "type": "ref", "name": "REASON-U" },
+                  { "type": "ref", "name": "request" }
+                ]
+              },
+              {
+                "type": "assign",
+                "target": "result",
+                "value": { "type": "ref", "name": "reason_output" }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Ch'en",
+      "nodes": [
+        {
+          "type": "emit",
+          "value": { "type": "ref", "name": "result" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Xul",
+      "nodes": [
+        {
+          "type": "if",
+          "test": {
+            "type": "op", "op": "==",
+            "args": [
+              { "type": "ref", "name": "result.complete" },
+              { "type": "literal", "value": true }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "collapse",
+                "args": [
+                  { "type": "ref", "name": "request_cycle" }
+                ]
+              }
+            ]
+          },
+          "else": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "fold",
+                "args": [
+                  { "type": "ref", "name": "request_cycle" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "kuhul": "2.0.0",
+  "type": "node_population",
+  "meta": {
+    "name": "Conversation Domain Node Population",
+    "version": "1.0.0",
+    "description": "Semantic @nodes used by the CONVERSATION domain. The classic ELIZA therapist dataset is one population of these mechanisms.",
+    "conformance_version": "2.0.0"
+  },
+  "nodes": [
+    {
+      "id": "conversation_memory",
+      "name": "memory",
+      "pattern": "\\b(remember|recall|forgot|memory|earlier|before|last time|you said)\\b",
+      "neighborhood": "MEMORY",
+      "fold": "Pop",
+      "tags": ["conversation"],
+      "intent": "recall",
+      "response_templates": [
+        "What do you remember about (0)?",
+        "Is there something else you recall?",
+        "What does (0) suggest to you?"
+      ],
+      "relations": [
+        ["{match}", "is", "memory"],
+        ["memory", "connects_to", "present"]
+      ]
+    },
+    {
+      "id": "conversation_relation",
+      "name": "relation",
+      "pattern": "\\b(family|mother|father|parent|friend|relationship|someone|people|together)\\b",
+      "neighborhood": "SOCIAL",
+      "fold": "Wo",
+      "tags": ["conversation"],
+      "intent": "explore_relationships",
+      "response_templates": [
+        "Tell me more about your relationships.",
+        "Who is important to you in (0)?",
+        "How do you feel about (0)?"
+      ],
+      "relations": [
+        ["{match}", "is", "relation"],
+        ["relation", "involves", "emotion"]
+      ]
+    },
+    {
+      "id": "conversation_affect",
+      "name": "affect",
+      "pattern": "\\b(feel|feeling|felt|sad|happy|worried|anxious|fear|lonely|depressed|joy)\\b",
+      "neighborhood": "EMOTION",
+      "fold": "Wo",
+      "tags": ["conversation"],
+      "intent": "explore_feeling",
+      "response_templates": [
+        "Why do you feel (0)?",
+        "Have you felt (0) before?",
+        "What does (0) feel like?"
+      ],
+      "relations": [
+        ["{match}", "is", "affect"],
+        ["affect", "influences", "thought"]
+      ]
+    },
+    {
+      "id": "conversation_reflection",
+      "name": "reflection",
+      "pattern": "\\b(think|believe|opinion|idea|perspective|view|wonder|mean)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Ch'en",
+      "tags": ["conversation"],
+      "intent": "examine_belief",
+      "response_templates": [
+        "Why do you think (0)?",
+        "What makes you believe (0)?",
+        "Have you always thought (0)?"
+      ],
+      "relations": [
+        ["{match}", "is", "reflection"],
+        ["reflection", "precedes", "change"]
+      ]
+    },
+    {
+      "id": "conversation_articulation",
+      "name": "articulation",
+      "pattern": "\\b(.*)",
+      "neighborhood": "OPEN",
+      "fold": "Sek",
+      "tags": ["conversation"],
+      "intent": "general_prompt",
+      "response_templates": [
+        "Can you tell me more about that?",
+        "How does that make you feel?",
+        "What do you mean by that?",
+        "That is interesting. Can you elaborate?",
+        "Why do you say that?",
+        "I see. Please continue."
+      ],
+      "relations": [
+        ["{match}", "invites", "articulation"]
+      ]
+    }
+  ]
+}

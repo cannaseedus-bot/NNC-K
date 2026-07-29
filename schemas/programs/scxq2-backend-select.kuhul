@@ -1,0 +1,202 @@
+{
+  "kuhul": "1.0",
+  "type": "program",
+  "folds": [
+    {
+      "type": "fold",
+      "name": "Pop",
+      "nodes": [{ "type": "literal", "value": "compute" }]
+    },
+    {
+      "type": "fold",
+      "name": "Wo",
+      "nodes": [
+        {
+          "type": "assign",
+          "target": "graph",
+          "value": { "type": "ref", "name": "input.scxq2" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Yax",
+      "nodes": [
+        {
+          "type": "call",
+          "name": "validate",
+          "args": [{ "type": "ref", "name": "graph" }]
+        },
+        {
+          "type": "assign",
+          "target": "valid",
+          "value": { "type": "ref", "name": "validation_output" }
+        },
+        {
+          "type": "call",
+          "name": "inspect_host",
+          "args": []
+        },
+        {
+          "type": "assign",
+          "target": "hardware",
+          "value": { "type": "ref", "name": "host_output" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Sek",
+      "nodes": [
+        {
+          "type": "if",
+          "test": {
+            "type": "op", "op": "==",
+            "args": [
+              { "type": "ref", "name": "valid" },
+              { "type": "literal", "value": true }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "if",
+                "test": {
+                  "type": "op", "op": "==",
+                  "args": [
+                    { "type": "ref", "name": "hardware.d3d12" },
+                    { "type": "literal", "value": true }
+                  ]
+                },
+                "then": {
+                  "type": "block",
+                  "nodes": [
+                    {
+                      "type": "call",
+                      "name": "dispatch",
+                      "args": [
+                        { "type": "ref", "name": "graph" },
+                        { "type": "literal", "value": "D3D12" }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "if",
+                "test": {
+                  "type": "op", "op": "==",
+                  "args": [
+                    { "type": "ref", "name": "hardware.d3d11" },
+                    { "type": "literal", "value": true }
+                  ]
+                },
+                "then": {
+                  "type": "block",
+                  "nodes": [
+                    {
+                      "type": "call",
+                      "name": "dispatch",
+                      "args": [
+                        { "type": "ref", "name": "graph" },
+                        { "type": "literal", "value": "D3D11" }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "if",
+                "test": {
+                  "type": "op", "op": "==",
+                  "args": [
+                    { "type": "ref", "name": "hardware.opencl" },
+                    { "type": "literal", "value": true }
+                  ]
+                },
+                "then": {
+                  "type": "block",
+                  "nodes": [
+                    {
+                      "type": "call",
+                      "name": "dispatch",
+                      "args": [
+                        { "type": "ref", "name": "graph" },
+                        { "type": "literal", "value": "OPENCL" }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "if",
+                "test": {
+                  "type": "op", "op": "==",
+                  "args": [
+                    { "type": "ref", "name": "hardware.cpu" },
+                    { "type": "literal", "value": true }
+                  ]
+                },
+                "then": {
+                  "type": "block",
+                  "nodes": [
+                    {
+                      "type": "call",
+                      "name": "dispatch",
+                      "args": [
+                        { "type": "ref", "name": "graph" },
+                        { "type": "literal", "value": "CPU" }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Ch'en",
+      "nodes": [
+        {
+          "type": "emit",
+          "value": { "type": "ref", "name": "dispatch.result" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Xul",
+      "nodes": [
+        {
+          "type": "if",
+          "test": {
+            "type": "op", "op": "==",
+            "args": [
+              { "type": "ref", "name": "dispatch.success" },
+              { "type": "literal", "value": false }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "choose_next_backend",
+                "args": [{ "type": "ref", "name": "hardware" }]
+              },
+              {
+                "type": "call",
+                "name": "fold",
+                "args": [{ "type": "literal", "value": "compute" }]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

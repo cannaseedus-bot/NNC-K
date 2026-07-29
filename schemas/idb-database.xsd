@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="xcfe://schema/idb-memory/v1"
+           xmlns:idb="xcfe://schema/idb-memory/v1"
+           elementFormDefault="qualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      IDB Memory Plane — structured memory, identity, and replay schema.
+      Integrates UserDatabase.cs (PBKDF2 auth + sessions) with the
+      XCFE phase matrix for semantic memory queries.
+      Includes: user memory, files, chat/RLHF, agents, skills, micronauts.
+    </xs:documentation>
+  </xs:annotation>
+
+  <xs:element name="memory" type="idb:MemoryPlaneType"/>
+
+  <xs:complexType name="MemoryPlaneType">
+    <xs:sequence>
+      <xs:element name="version" type="xs:string" fixed="1.0.0" minOccurs="0"/>
+      <xs:element name="users" type="idb:UsersType" minOccurs="0"/>
+      <xs:element name="sessions" type="idb:SessionsType" minOccurs="0"/>
+      <xs:element name="entries" type="idb:EntriesType" minOccurs="0"/>
+      <xs:element name="memories" type="idb:MemoriesType" minOccurs="0"/>
+      <xs:element name="files" type="idb:FilesType" minOccurs="0"/>
+      <xs:element name="chat_history" type="idb:ChatHistoryType" minOccurs="0"/>
+      <xs:element name="rlhf" type="idb:RLHFType" minOccurs="0"/>
+      <xs:element name="agents" type="idb:AgentsType" minOccurs="0"/>
+      <xs:element name="skills" type="idb:SkillsType" minOccurs="0"/>
+      <xs:element name="micronauts" type="idb:MicronautsType" minOccurs="0"/>
+      <xs:element name="replay" type="idb:ReplayType" minOccurs="0"/>
+      <xs:element name="learning" type="idb:LearningType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="created" type="xs:dateTime"/>
+    <xs:attribute name="updated" type="xs:dateTime"/>
+    <xs:attribute name="phase" type="idb:PhaseType"/>
+  </xs:complexType>
+
+  <xs:simpleType name="PhaseType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Pop"/><xs:enumeration value="Wo"/>
+      <xs:enumeration value="Yax"/><xs:enumeration value="Sek"/>
+      <xs:enumeration value="Chen"/><xs:enumeration value="Xul"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="GlyphType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="◉"/><xs:enumeration value="⬢"/>
+      <xs:enumeration value="△"/><xs:enumeration value="✦"/>
+      <xs:enumeration value="◇"/><xs:enumeration value="⬡"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="UserType">
+    <xs:sequence>
+      <xs:element name="username" type="xs:string"/>
+      <xs:element name="password_hash" type="xs:string"/>
+      <xs:element name="role" type="xs:string" default="user"/>
+      <xs:element name="capabilities" type="idb:CapabilitiesType" minOccurs="0"/>
+      <xs:element name="preferences" type="idb:PreferencesType" minOccurs="0"/>
+      <xs:element name="last_login" type="xs:dateTime" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="active" type="xs:boolean" default="true"/>
+    <xs:attribute name="created" type="xs:dateTime"/>
+  </xs:complexType>
+
+  <xs:complexType name="UsersType">
+    <xs:sequence>
+      <xs:element name="user" type="idb:UserType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SessionType">
+    <xs:attribute name="token" type="xs:string" use="required"/>
+    <xs:attribute name="user_id" type="xs:string"/>
+    <xs:attribute name="username" type="xs:string"/>
+    <xs:attribute name="created" type="xs:dateTime"/>
+    <xs:attribute name="expires" type="xs:dateTime"/>
+  </xs:complexType>
+
+  <xs:complexType name="SessionsType">
+    <xs:sequence>
+      <xs:element name="session" type="idb:SessionType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EntryType">
+    <xs:sequence>
+      <xs:element name="prompt" type="xs:string"/>
+      <xs:element name="response" type="xs:string"/>
+      <xs:element name="model" type="xs:string" minOccurs="0"/>
+      <xs:element name="tools" type="idb:ToolCallsType" minOccurs="0"/>
+      <xs:element name="metrics" type="idb:MetricsType" minOccurs="0"/>
+      <xs:element name="tags" type="idb:TagsType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="phase" type="idb:PhaseType"/>
+    <xs:attribute name="glyph" type="idb:GlyphType"/>
+    <xs:attribute name="user_id" type="xs:string"/>
+    <xs:attribute name="session_id" type="xs:string"/>
+    <xs:attribute name="quality" type="xs:double"/>
+    <xs:attribute name="importance" type="xs:integer"/>
+    <xs:attribute name="timestamp" type="xs:dateTime"/>
+  </xs:complexType>
+
+  <xs:complexType name="EntriesType">
+    <xs:sequence>
+      <xs:element name="entry" type="idb:EntryType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="MemoryNoteType">
+    <xs:sequence>
+      <xs:element name="content" type="xs:string"/>
+      <xs:element name="context" type="xs:string" minOccurs="0"/>
+      <xs:element name="tags" type="idb:TagsType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="user_id" type="xs:string"/>
+    <xs:attribute name="phase" type="idb:PhaseType"/>
+    <xs:attribute name="importance" type="xs:integer" default="1"/>
+    <xs:attribute name="pinned" type="xs:boolean" default="false"/>
+    <xs:attribute name="created" type="xs:dateTime"/>
+    <xs:attribute name="expires" type="xs:dateTime"/>
+  </xs:complexType>
+
+  <xs:complexType name="MemoriesType">
+    <xs:sequence>
+      <xs:element name="memory" type="idb:MemoryNoteType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="FileRecordType">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="path" type="xs:string"/>
+      <xs:element name="size_bytes" type="xs:integer"/>
+      <xs:element name="content_type" type="xs:string"/>
+      <xs:element name="hash" type="xs:string" minOccurs="0"/>
+      <xs:element name="source" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="user_id" type="xs:string"/>
+    <xs:attribute name="session_id" type="xs:string"/>
+    <xs:attribute name="phase" type="idb:PhaseType"/>
+    <xs:attribute name="uploaded" type="xs:dateTime"/>
+  </xs:complexType>
+
+  <xs:complexType name="FilesType">
+    <xs:sequence>
+      <xs:element name="file" type="idb:FileRecordType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ChatMessageType">
+    <xs:sequence>
+      <xs:element name="role" type="xs:string"/>
+      <xs:element name="content" type="xs:string"/>
+      <xs:choice minOccurs="0">
+        <xs:element name="tool_calls" type="idb:ToolCallsType"/>
+        <xs:element name="tool_result" type="xs:string"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="seq" type="xs:integer"/>
+    <xs:attribute name="phase" type="idb:PhaseType"/>
+    <xs:attribute name="model" type="xs:string"/>
+    <xs:attribute name="latency_ms" type="xs:integer"/>
+  </xs:complexType>
+
+  <xs:complexType name="ChatSessionType">
+    <xs:sequence>
+      <xs:element name="message" type="idb:ChatMessageType" maxOccurs="unbounded"/>
+      <xs:element name="feedback" type="idb:RLHFFeedbackType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="user_id" type="xs:string"/>
+    <xs:attribute name="topic" type="xs:string"/>
+    <xs:attribute name="model" type="xs:string"/>
+    <xs:attribute name="started" type="xs:dateTime"/>
+    <xs:attribute name="phase" type="idb:PhaseType"/>
+  </xs:complexType>
+
+  <xs:complexType name="ChatHistoryType">
+    <xs:sequence>
+      <xs:element name="session" type="idb:ChatSessionType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="RLHFFeedbackType">
+    <xs:attribute name="rating" type="xs:integer"/>
+    <xs:attribute name="corrected" type="xs:boolean" default="false"/>
+    <xs:attribute name="user_id" type="xs:string"/>
+    <xs:attribute name="timestamp" type="xs:dateTime"/>
+  </xs:complexType>
+
+  <xs:complexType name="RLHFType">
+    <xs:sequence>
+      <xs:element name="feedback" type="idb:RLHFFeedbackType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="AgentType">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="model" type="xs:string" minOccurs="0"/>
+      <xs:element name="prompt" type="xs:string" minOccurs="0"/>
+      <xs:element name="capabilities" type="idb:CapabilitiesType" minOccurs="0"/>
+      <xs:element name="tools" type="idb:ToolCallsType" minOccurs="0"/>
+      <xs:element name="config" type="idb:ConfigType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="user_id" type="xs:string"/>
+    <xs:attribute name="active" type="xs:boolean" default="true"/>
+    <xs:attribute name="phase" type="idb:PhaseType"/>
+    <xs:attribute name="created" type="xs:dateTime"/>
+  </xs:complexType>
+
+  <xs:complexType name="AgentsType">
+    <xs:sequence>
+      <xs:element name="agent" type="idb:AgentType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SkillType">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="source" type="xs:string" minOccurs="0"/>
+      <xs:element name="phases" type="idb:PhaseListType" minOccurs="0"/>
+      <xs:element name="dependencies" type="idb:DependencyListType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="user_id" type="xs:string"/>
+    <xs:attribute name="active" type="xs:boolean" default="true"/>
+    <xs:attribute name="created" type="xs:dateTime"/>
+  </xs:complexType>
+
+  <xs:complexType name="SkillsType">
+    <xs:sequence>
+      <xs:element name="skill" type="idb:SkillType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="MicronautType">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="kind" type="xs:string"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="model" type="xs:string" minOccurs="0"/>
+      <xs:element name="fold" type="xs:string" minOccurs="0"/>
+      <xs:element name="source" type="xs:string" minOccurs="0"/>
+      <xs:element name="triggers" type="idb:TriggersType" minOccurs="0"/>
+      <xs:element name="config" type="idb:ConfigType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="user_id" type="xs:string"/>
+    <xs:attribute name="active" type="xs:boolean" default="true"/>
+    <xs:attribute name="created" type="xs:dateTime"/>
+  </xs:complexType>
+
+  <xs:complexType name="MicronautsType">
+    <xs:sequence>
+      <xs:element name="micronaut" type="idb:MicronautType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReplayType">
+    <xs:sequence>
+      <xs:element name="event" type="idb:ReplayEventType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ReplayEventType">
+    <xs:sequence>
+      <xs:element name="input_hash" type="xs:string"/>
+      <xs:element name="output_hash" type="xs:string"/>
+      <xs:element name="delta" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="seq" type="xs:integer"/>
+    <xs:attribute name="phase" type="idb:PhaseType"/>
+    <xs:attribute name="quality" type="xs:double"/>
+    <xs:attribute name="timestamp" type="xs:dateTime"/>
+  </xs:complexType>
+
+  <xs:complexType name="LearningType">
+    <xs:sequence>
+      <xs:element name="score" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="model" type="xs:string"/>
+          <xs:attribute name="quality" type="xs:double"/>
+          <xs:attribute name="has_code" type="xs:boolean"/>
+          <xs:attribute name="py_valid" type="xs:boolean"/>
+          <xs:attribute name="timestamp" type="xs:dateTime"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CapabilitiesType">
+    <xs:sequence>
+      <xs:element name="capability" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PreferencesType">
+    <xs:sequence>
+      <xs:element name="preference" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute name="key" type="xs:string"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ToolCallsType">
+    <xs:sequence>
+      <xs:element name="tool" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="MetricsType">
+    <xs:attribute name="tokens" type="xs:integer"/>
+    <xs:attribute name="latency_ms" type="xs:integer"/>
+    <xs:attribute name="complexity" type="xs:double"/>
+  </xs:complexType>
+
+  <xs:complexType name="TagsType">
+    <xs:sequence>
+      <xs:element name="tag" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PhaseListType">
+    <xs:sequence>
+      <xs:element name="phase" type="idb:PhaseType" minOccurs="0" maxOccurs="6"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="DependencyListType">
+    <xs:sequence>
+      <xs:element name="dependency" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TriggersType">
+    <xs:sequence>
+      <xs:element name="trigger" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="pattern" type="xs:string"/>
+          <xs:attribute name="action" type="xs:string"/>
+          <xs:attribute name="phase" type="idb:PhaseType"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ConfigType">
+    <xs:sequence>
+      <xs:element name="setting" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute name="key" type="xs:string"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  
+
+</xs:schema>

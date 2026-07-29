@@ -1,0 +1,105 @@
+{
+  "kuhul": "2.0.0",
+  "type": "micro_agent_population",
+  "meta": {
+    "name": "Quantum Trinity Micro-Agent Registry",
+    "version": "1.0.0",
+    "description": "Node-level semantic micro-agents. These agents emit candidate text/structures only; they do not create, update, merge, or promote micronauts.",
+    "conformance_version": "2.0.0",
+    "authority_boundary": "candidate_only"
+  },
+  "agents": [
+    {
+      "template": "parser",
+      "name": "Parser Agent",
+      "description": "Parses input using GBNF, EBNF, and PEG grammars",
+      "capabilities": ["parse", "validate", "tokenize", "grammar_check"],
+      "triggers": ["parse", "grammar", "syntax", "token", "validate"],
+      "priority": 5,
+      "weights": {
+        "accuracy": 0.9,
+        "speed": 0.7,
+        "depth": 0.8
+      },
+      "activation_threshold": 0.5,
+      "learning_rate": 0.01
+    },
+    {
+      "template": "therapist",
+      "name": "ELIZA Therapist",
+      "description": "Provides therapeutic responses using ELIZA-style reflective patterns",
+      "capabilities": ["empathize", "listen", "support", "reflect", "guide"],
+      "triggers": ["feel", "emotion", "sad", "angry", "happy", "anxious", "stress", "depressed", "frustrated", "excited", "confused"],
+      "priority": 7,
+      "weights": {
+        "empathy": 0.95,
+        "support": 0.9,
+        "guidance": 0.8
+      },
+      "activation_threshold": 0.5,
+      "learning_rate": 0.01
+    },
+    {
+      "template": "cognitive",
+      "name": "ADAM12 Cognitive Agent",
+      "description": "Provides cognitive analysis and decision support",
+      "capabilities": ["analyze", "decide", "reason", "solve", "plan"],
+      "triggers": ["problem", "solution", "think", "decide", "analyze", "reason", "because", "if", "should"],
+      "priority": 6,
+      "weights": {
+        "logic": 0.95,
+        "analysis": 0.9,
+        "decision": 0.85
+      },
+      "activation_threshold": 0.5,
+      "learning_rate": 0.01
+    },
+    {
+      "template": "regex",
+      "name": "Regex Pattern Agent",
+      "description": "Pattern matching using regular expressions",
+      "capabilities": ["match", "extract", "replace", "validate_pattern"],
+      "triggers": ["pattern", "match", "regex", "extract", "find", "email", "url", "phone", "date"],
+      "priority": 4,
+      "weights": {
+        "precision": 0.95,
+        "coverage": 0.8,
+        "speed": 0.9
+      },
+      "activation_threshold": 0.5,
+      "learning_rate": 0.01
+    },
+    {
+      "template": "quantum",
+      "name": "Quantum Superposition Agent",
+      "description": "Quantum-inspired processing with superposition",
+      "capabilities": ["superpose", "collapse", "entangle", "quantum_analyze"],
+      "triggers": ["quantum", "superposition", "entanglement", "collapse"],
+      "priority": 8,
+      "weights": {
+        "quantum_accuracy": 0.9,
+        "superposition": 0.95,
+        "coherence": 0.85
+      },
+      "activation_threshold": 0.5,
+      "learning_rate": 0.01,
+      "is_quantum": true,
+      "quantum_phase": 0.5
+    },
+    {
+      "template": "code",
+      "name": "Code Analysis Agent",
+      "description": "Analyzes code structure and provides insights",
+      "capabilities": ["analyze_code", "detect_patterns", "suggest_refactor", "find_bugs"],
+      "triggers": ["code", "class", "struct", "method", "function", "variable", "syntax", "bug", "refactor"],
+      "priority": 6,
+      "weights": {
+        "analysis_depth": 0.9,
+        "pattern_recognition": 0.85,
+        "suggestion_quality": 0.8
+      },
+      "activation_threshold": 0.5,
+      "learning_rate": 0.01
+    }
+  ]
+}

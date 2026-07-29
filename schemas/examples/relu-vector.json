@@ -1,0 +1,13 @@
+{
+  "$schema": "mathml-tensor-v1",
+  "expression": {
+    "type": "apply",
+    "operator": "relu",
+    "left": {"type": "vector", "data": [-2.0, -1.0, 0.0, 1.0, 2.0]}
+  },
+  "metadata": {
+    "name": "relu-vector-5",
+    "description": "ReLU activation on a 5-element vector — negative values clamp to 0",
+    "source": "asx.mathml.nnc.xsd.neural_grammar.v1 @examples.relu_vector"
+  }
+}

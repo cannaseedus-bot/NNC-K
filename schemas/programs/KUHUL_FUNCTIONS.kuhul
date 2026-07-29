@@ -1,0 +1,42 @@
+{
+  "kuhul": "2.0.0",
+  "type": "program",
+  "meta": {
+    "name": "K'UHUL Function Binding Declarations",
+    "description": "External node bindings for filesystem, process, tool, agent, micronaut, skill, action, verb, bot, shell, and network effects. Functions are sidecars called by K'UHUL; they never call back into K'UHUL.",
+    "version": "1.0.0",
+    "authority_boundary": "candidate_only"
+  },
+  "functions": [
+    { "name": "read_file", "effect": "io",      "signature": "fn read_file(path: string) -> string" },
+    { "name": "write_file", "effect": "io",     "signature": "fn write_file(path: string, content: string) -> bool" },
+    { "name": "exec", "effect": "process",    "signature": "fn exec(cmd: string, args: list<string>) -> list<string>" },
+    { "name": "shell", "effect": "shell",     "signature": "fn shell(cmd: string) -> bool" },
+    { "name": "tool", "effect": "tool",       "signature": "fn tool(name: string, input: map) -> map" },
+    { "name": "agent", "effect": "agent",     "signature": "fn agent(name: string, prompt: string) -> string" },
+    { "name": "micronaut", "effect": "micronaut", "signature": "fn micronaut(name: string, args: map) -> map" },
+    { "name": "skill", "effect": "skill",     "signature": "fn skill(name: string, input: any) -> any" },
+    { "name": "action", "effect": "action",   "signature": "fn action(name: string, params: map) -> map" },
+    { "name": "verb", "effect": "verb",       "signature": "fn verb(name: string, subject: string, object: string) -> string" },
+    { "name": "bot", "effect": "bot",         "signature": "fn bot(name: string, message: string) -> string" },
+    { "name": "http", "effect": "network",    "signature": "fn http(method: string, url: string, body: string) -> map" }
+  ],
+  "sidecar_bindings": {
+    "tool": {
+      "hybrid": "bin/Quantum/quantum_hybrid.exe",
+      "grammar": "bin/Quantum/quantum_grammar.exe",
+      "research": "bin/Quantum/quantum_trinity.exe",
+      "microagents": "bin/Quantum/quantum_microagents.exe"
+    },
+    "agent": "bin/Quantum/quantum_microagents.exe",
+    "micronaut": "bin/micronaut_factory.exe",
+    "skill": {
+      "asx_ram": "bin/asx_ram_v2.exe",
+      "file_drop": "PowerShell Invoke-FileDropIngest",
+      "semantic_refine": "PowerShell Refine-Micronaut"
+    },
+    "bot": "model_node_chat",
+    "verb": "scripts/xcfe_router.py",
+    "http": "scripts/research_bot.py"
+  }
+}

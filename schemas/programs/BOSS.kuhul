@@ -1,0 +1,52 @@
+{
+  "kuhul": "1.0",
+  "type": "program",
+  "folds": [
+    { "type": "fold", "name": "Pop", "nodes": [
+      { "type": "literal", "value": "BOSS" },
+      { "type": "assign", "target": "coverage_threshold", "value": { "type": "literal", "value": 0.7 } }
+    ] },
+    { "type": "fold", "name": "Wo", "nodes": [
+      { "type": "assign", "target": "catalog", "value": { "type": "literal", "value": {
+        "subjects": {}, "total": 0, "curated": 0, "coverage": 0.0
+      } } },
+      { "type": "assign", "target": "discover_queue", "value": { "type": "literal", "value": [] } }
+    ] },
+    { "type": "fold", "name": "Yax", "nodes": [
+      { "type": "if", "test": { "type": "op", "op": "<", "args": [{ "type": "ref", "name": "catalog.coverage" }, { "type": "ref", "name": "coverage_threshold" }] },
+        "then": { "type": "block", "nodes": [
+          { "type": "call", "name": "identify_gaps", "args": [{ "type": "ref", "name": "catalog" }] },
+          { "type": "assign", "target": "discover_queue", "value": { "type": "ref", "name": "gap_list" } }
+        ] }
+      },
+      { "type": "call", "name": "classify", "args": [{ "type": "ref", "name": "input" }] }
+    ] },
+    { "type": "fold", "name": "Sek", "nodes": [
+      { "type": "if", "test": { "type": "op", "op": ">", "args": [{ "type": "ref", "name": "discover_queue.length" }, { "type": "literal", "value": 0 }] },
+        "then": { "type": "block", "nodes": [
+          { "type": "call", "name": "discover", "args": [{ "type": "ref", "name": "discover_queue" }] },
+          { "type": "call", "name": "curate", "args": [{ "type": "ref", "name": "discovered" }] },
+          { "type": "call", "name": "verify", "args": [{ "type": "ref", "name": "curated" }] },
+          { "type": "call", "name": "promote", "args": [{ "type": "ref", "name": "verified" }] }
+        ] }
+      },
+      { "type": "call", "name": "advise", "args": [{ "type": "ref", "name": "input" }] }
+    ] },
+    { "type": "fold", "name": "Ch'en", "nodes": [
+      { "type": "emit", "value": { "type": "literal", "value": {
+        "admitted": "admitted", "coverage": "catalog.coverage", "subjects": "catalog.subjects"
+      } } }
+    ] },
+    { "type": "fold", "name": "Xul", "nodes": [
+      { "type": "if", "test": { "type": "op", "op": "<", "args": [{ "type": "ref", "name": "catalog.coverage" }, { "type": "ref", "name": "coverage_threshold" }] },
+        "then": { "type": "block", "nodes": [
+          { "type": "call", "name": "reindex", "args": [{ "type": "ref", "name": "catalog" }] },
+          { "type": "call", "name": "fold", "args": [{ "type": "literal", "value": "BOSS" }] }
+        ] },
+        "else": { "type": "block", "nodes": [
+          { "type": "call", "name": "collapse", "args": [{ "type": "literal", "value": "BOSS" }] }
+        ] }
+      }
+    ] }
+  ]
+}

@@ -143,10 +143,47 @@ Three domain-specialist micronauts are being built on the MM-1 (ModelMicronaut) 
 | ID | Name | Base | Path | Fine-tune |
 |----|------|------|------|-----------|
 | MM-MATH | MathMicronaut | GPT-2 medium 117M | `E:\models\GPT2\math-GPT` | Math reasoning + KXML step-by-step |
-| MM-CODER | CoderMicronaut | GPT-2 medium 117M + C++ engine | `micronaut-coder\build-cmake-targets-vs2022\bin\Release\micronaut_coder.exe` | 7M+ coding Q&A |
+| MM-CODER | CoderMicronaut | Qwen2.5 0.5B Instruct Q8 + C++ AST engine | `bin/micronaut/coder/Release/micronaut_coder_mcp.exe` | Persistent project coding + phase-gated AST operations |
 | MM-TOOLCALL | ToolcallMicronaut | GPT-2 medium 117M | `E:\models\GPT2\med-GPT` | Toolcall dispatch + geodesic ARC attention |
 
 Registry: `micronaut/micronaut.registry.xjson` (authoritative). Fold system: `micronaut/folds.toml` (15 folds, mutation forbidden).
+
+### MM-CODER AST runtime
+
+MM-CODER uses the local controller model at
+`C:\Users\canna\.lmstudio\models\qwen2.5-0.5b-instruct-q8_0.gguf` to propose
+bounded coding operations. The model does not edit files directly. It calls
+`bin/micronaut/coder/Release/micronaut_coder_mcp.exe`, which exposes `read`,
+`write`, `patch`, `search`, `validate`, `ingest`, `ast`, `spit`, `phase`,
+`publish`, and `grammar`.
+
+The MCP AST path loads language parsers from `bin/CodeWASM/` through
+`scripts/tree_sitter_wasm_bridge.mjs`. Supported WASM grammars include Bash,
+C, C++, C#, CSS, Go, HTML, Java, JavaScript, JSON, K-UHUL/KHL, PHP, Python, Ruby, Rust,
+Scala, TypeScript, and TSX. The resulting `kuhul.coder.ast.v1` graph passes
+through POP, WO, SEK, CHEN, and XUL before it is returned to the model.
+
+K-UHUL uses one semantic runtime loop. `Pop`, `Wo`, `Sek`, `Ch'en`, and `Xul`
+are authority gates that decide which operation is allowed at each tick.
+`Sek => Sek <= Sek` permits reflexive compute refinement; a changed tensor
+shape must carry an explicit transformation law before output can be verified
+and committed.
+
+The Node binding supplies its matching core Tree-sitter runtime; the
+repository's `bin/CodeWASM/tree-sitter.wasm` is a separate WASI build. The
+language grammar WASMs remain the authoritative parser assets.
+
+Build the MCP target from a Visual Studio developer shell:
+
+```powershell
+& 'C:\Program Files\CMake\bin\cmake.exe' `
+  -S bin\micronaut\coder `
+  -B bin\micronaut\coder\build-nnck-vs `
+  -G Ninja -DCMAKE_BUILD_TYPE=Release
+& 'C:\Program Files\CMake\bin\cmake.exe' `
+  --build bin\micronaut\coder\build-nnck-vs `
+  --target micronaut_coder_mcp
+```
 
 ### MM-CODER Internet Learning Pipeline
 

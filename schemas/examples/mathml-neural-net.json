@@ -1,0 +1,27 @@
+{
+  "$schema": "asx-nnc-v1",
+  "program": {
+    "name": "mathml-neural-net",
+    "layers": [
+      {"type": "input", "size": 3, "mathml": "x in R^3"},
+      {"type": "dense", "neurons": 6, "activation": "relu", "mathml": "h1 = ReLU(W1*x + b1)"},
+      {"type": "dense", "neurons": 4, "activation": "tanh", "mathml": "h2 = tanh(W2*h1 + b2)"},
+      {"type": "dense", "neurons": 2, "activation": "softmax", "mathml": "y = softmax(W3*h2 + b3)"}
+    ],
+    "weights": {
+      "layer1": [[0.9, 0.3, 0.2], [0.2, 0.8, 0.4], [0.3, 0.1, 0.7], [0.5, 0.4, 0.3], [0.1, 0.6, 0.2], [0.4, 0.2, 0.5]],
+      "layer2": [[0.7, 0.3, 0.5, 0.1, 0.2, 0.4], [0.2, 0.6, 0.1, 0.5, 0.4, 0.3], [0.4, 0.2, 0.3, 0.6, 0.5, 0.1]],
+      "layer3": [[0.5, 0.3, 0.1, 0.2], [0.4, 0.2, 0.5, 0.1]]
+    },
+    "bias": {
+      "layer1": [0.2, 0.3, 0.4, 0.5, 0.1, 0.2],
+      "layer2": [0.3, 0.4, 0.5],
+      "layer3": [0.1, 0.2]
+    }
+  },
+  "metadata": {
+    "name": "mathml-neural-net",
+    "description": "3-layer neural network with MathML annotations per layer — input(3) -> dense(6,relu) -> dense(4,tanh) -> dense(2,softmax)",
+    "source": "asx.mathml.nnc.xsd.neural_grammar.v1 @examples.mathml_neural_net"
+  }
+}

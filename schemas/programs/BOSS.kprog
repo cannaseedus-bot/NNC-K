@@ -1,0 +1,22 @@
+@seq
+    @coverage
+    @log
+        message: BOSS contract manager reading coverage state...
+    @log
+        message: ${coverage.total_turns} turns, fold_coverage=${coverage.fold_coverage}, success_rate=${coverage.success_rate}
+    @if
+        condition: $coverage_needs_refold
+        @seq
+            label: then
+            @log
+                message: DECISION_REFOLD — coverage below threshold
+            @var
+                name: contract_decision
+                value: REFOLD
+        @seq
+            label: else
+            @log
+                message: DECISION_COLLAPSE — coverage sufficient
+            @var
+                name: contract_decision
+                value: COLLAPSE

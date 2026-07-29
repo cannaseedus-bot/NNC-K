@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Chat Feed XSD — history serialization for Neural Grammar engines.
+  Each session is a Fold, each turn is a Node, each response is a Micronaut.
+  MathML and NNC expressions are inlined for engine consumption.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:k="http://kuhul.io/schema/v3"
+           xmlns:cf="http://kuhul.io/chat-feed/v1"
+           targetNamespace="http://kuhul.io/chat-feed/v1"
+           elementFormDefault="qualified">
+
+  <xs:import namespace="http://kuhul.io/schema/v3" schemaLocation="neural-grammar.xsd"/>
+
+  <!-- Root: ChatFeed — ordered list of sessions -->
+  <xs:element name="ChatFeed">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="cf:ChatSession" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="version" type="xs:string" default="1.0"/>
+      <xs:attribute name="feedId" type="xs:string"/>
+      <xs:attribute name="created" type="xs:dateTime"/>
+      <xs:attribute name="totalTurns" type="xs:integer"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Session = one conversation Fold -->
+  <xs:element name="ChatSession">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="cf:ChatTurn" minOccurs="1" maxOccurs="unbounded"/>
+        <xs:element ref="cf:SessionMeta" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:string" use="required"/>
+      <xs:attribute name="topic" type="xs:string"/>
+      <xs:attribute name="phase" type="k:PhaseType" default="Pop"/>
+      <xs:attribute name="started" type="xs:dateTime"/>
+      <xs:attribute name="ended" type="xs:dateTime"/>
+      <xs:attribute name="turnCount" type="xs:integer"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Session metadata: tags, tokens, gravity well refs -->
+  <xs:element name="SessionMeta">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Tag" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="Token" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="GravityWell" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="adapterId" type="xs:string"/>
+      <xs:attribute name="loraHash" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Turn = one exchange (user → system) -->
+  <xs:element name="ChatTurn">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="cf:UserMessage"/>
+        <xs:element ref="cf:SystemResponse"/>
+        <xs:element ref="cf:MathMLBlock" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="cf:NNCBlock" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="cf:TurnMetrics" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="seq" type="xs:integer" use="required"/>
+      <xs:attribute name="phase" type="k:PhaseType" default="Sek"/>
+      <xs:attribute name="timestamp" type="xs:dateTime"/>
+      <xs:attribute name="routeTier" type="xs:string"/>  <!-- Tier1_Exact | Tier2_LoRA | Tier3_Expansion -->
+      <xs:attribute name="cascadeConfidence" type="xs:float"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="UserMessage">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+      </xs:sequence>
+      <xs:attribute name="role" type="xs:string" default="user"/>
+      <xs:attribute name="tokenCount" type="xs:integer"/>
+      <xs:attribute name="intent" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="SystemResponse">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+      </xs:sequence>
+      <xs:attribute name="role" type="xs:string" default="system"/>
+      <xs:attribute name="target" type="xs:string"/>  <!-- CM-1, PM-1, etc. -->
+      <xs:attribute name="fold" type="xs:string"/>
+      <xs:attribute name="confidence" type="xs:float"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Inline MathML expressions for engine ingestion -->
+  <xs:element name="MathMLBlock">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+      </xs:sequence>
+      <xs:attribute name="operator" type="xs:string"/>
+      <xs:attribute name="result" type="xs:string"/>
+      <xs:attribute name="engine" type="xs:string" default="kuhul"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Inline NNC programs -->
+  <xs:element name="NNCBlock">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+      </xs:sequence>
+      <xs:attribute name="schema" type="xs:string" default="asx-nnc-v1"/>
+      <xs:attribute name="programName" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Per-turn metrics -->
+  <xs:element name="TurnMetrics">
+    <xs:complexType>
+      <xs:attribute name="latencyMs" type="xs:integer"/>
+      <xs:attribute name="tokensIn" type="xs:integer"/>
+      <xs:attribute name="tokensOut" type="xs:integer"/>
+      <xs:attribute name="cacheHit" type="xs:boolean"/>
+      <xs:attribute name="loraApplied" type="xs:boolean"/>
+      <xs:attribute name="hash" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

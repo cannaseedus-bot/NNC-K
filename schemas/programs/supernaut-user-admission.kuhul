@@ -1,0 +1,197 @@
+{
+  "kuhul": "1.0",
+  "type": "program",
+  "folds": [
+    {
+      "type": "fold",
+      "name": "Pop",
+      "nodes": [
+        {
+          "type": "literal",
+          "value": "user_session"
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Wo",
+      "nodes": [
+        {
+          "type": "assign",
+          "target": "google_id",
+          "value": {
+            "type": "ref",
+            "name": "input.google_id"
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Yax",
+      "nodes": [
+        {
+          "type": "call",
+          "name": "lookup",
+          "args": [
+            {
+              "type": "ref",
+              "name": "UserDatabase"
+            },
+            {
+              "type": "ref",
+              "name": "google_id"
+            }
+          ]
+        },
+        {
+          "type": "assign",
+          "target": "user",
+          "value": {
+            "type": "ref",
+            "name": "result"
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Sek",
+      "nodes": [
+        {
+          "type": "if",
+          "test": {
+            "type": "op",
+            "op": "==",
+            "args": [
+              {
+                "type": "ref",
+                "name": "user.exists"
+              },
+              {
+                "type": "literal",
+                "value": false
+              }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "create",
+                "args": [
+                  {
+                    "type": "ref",
+                    "name": "UserDatabase"
+                  },
+                  {
+                    "type": "literal",
+                    "value": {
+                      "google_id": "google_id",
+                      "provider": "google",
+                      "capabilities": ["chat", "search", "math"]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "call",
+          "name": "resolve_projects",
+          "args": [
+            {
+              "type": "ref",
+              "name": "user"
+            }
+          ]
+        },
+        {
+          "type": "call",
+          "name": "resolve_micronauts",
+          "args": [
+            {
+              "type": "ref",
+              "name": "user"
+            }
+          ]
+        },
+        {
+          "type": "call",
+          "name": "bind",
+          "args": [
+            {
+              "type": "ref",
+              "name": "user"
+            },
+            {
+              "type": "ref",
+              "name": "Supernaut"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Ch'en",
+      "nodes": [
+        {
+          "type": "emit",
+          "value": {
+            "type": "literal",
+            "value": {
+              "user": "user",
+              "projects": "projects",
+              "micronauts": "micronauts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Xul",
+      "nodes": [
+        {
+          "type": "if",
+          "test": {
+            "type": "op",
+            "op": "==",
+            "args": [
+              {
+                "type": "ref",
+                "name": "user.bound"
+              },
+              {
+                "type": "literal",
+                "value": true
+              }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "admit",
+                "args": [
+                  {
+                    "type": "ref",
+                    "name": "user"
+                  },
+                  {
+                    "type": "ref",
+                    "name": "XCFE"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

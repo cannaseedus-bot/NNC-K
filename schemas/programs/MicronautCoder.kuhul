@@ -1,0 +1,13 @@
+{
+  "kuhul": "1.0", "type": "program",
+  "folds": [
+    { "type": "fold", "name": "Pop", "nodes": [{ "type": "literal", "value": "MicronautCoder" }] },
+    { "type": "fold", "name": "Wo", "nodes": [{ "type": "assign", "target": "language", "value": { "type": "literal", "value": "python" } }] },
+    { "type": "fold", "name": "Yax", "nodes": [{ "type": "call", "name": "plan", "args": [{ "type": "ref", "name": "input.spec" }] }] },
+    { "type": "fold", "name": "Sek", "nodes": [
+      { "type": "call", "name": "implement", "args": [{ "type": "ref", "name": "plan" }] },
+      { "type": "call", "name": "test", "args": [{ "type": "ref", "name": "code" }] } ] },
+    { "type": "fold", "name": "Ch'en", "nodes": [{ "type": "emit", "value": { "type": "ref", "name": "code" } }] },
+    { "type": "fold", "name": "Xul", "nodes": [{ "type": "call", "name": "collapse", "args": [{ "type": "literal", "value": "MicronautCoder" }] }] }
+  ]
+}

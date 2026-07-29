@@ -1,0 +1,117 @@
+{
+  "kuhul": "2.0.0",
+  "folds": [
+    {
+      "name": "Pop",
+      "nodes": [
+        {
+          "value": "chat",
+          "type": "literal"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Wo",
+      "nodes": [
+        {
+          "value": {
+            "value": "chat",
+            "type": "literal"
+          },
+          "target": "domain",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "value": {
+              "If you're referring to a scenario where **no specific micronaut matched** usi...-µ": 1.0
+            },
+            "type": "literal"
+          },
+          "target": "mixture",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "value": {
+              "evidence": [],
+              "relations": [],
+              "notation": []
+            },
+            "type": "literal"
+          },
+          "target": "state",
+          "type": "assign"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Yax",
+      "nodes": [
+        {
+          "name": "state.notation",
+          "type": "ref"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Sek",
+      "nodes": [
+        {
+          "value": {
+            "name": "If you're referring to a scenario where **no specific micronaut matched** usi...-µ",
+            "type": "ref"
+          },
+          "target": "note_If you're referring to a scenario where **no specific micronaut matched** usi...",
+          "type": "assign"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Ch'en",
+      "nodes": [
+        {
+          "value": {
+            "value": {
+              "contributions": "state.evidence",
+              "domain": "chat"
+            },
+            "type": "literal"
+          },
+          "type": "emit"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Xul",
+      "nodes": [
+        {
+          "name": "collapse",
+          "args": [
+            {
+              "value": "chat",
+              "type": "literal"
+            }
+          ],
+          "type": "call"
+        }
+      ],
+      "type": "fold"
+    }
+  ],
+  "type": "program",
+  "meta": {
+    "name": "chat Domain Program",
+    "version": "1.0.0",
+    "conformance_version": "2.0.0",
+    "description": "Auto-generated domain program for chat micronauts",
+    "required_micronauts": [
+      "If you're referring to a scenario where **no specific micronaut matched** usi...-µ"
+    ]
+  }
+}

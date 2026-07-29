@@ -1,0 +1,87 @@
+{
+  "kuhul": "1.0",
+  "type": "program",
+  "folds": [
+    { "type": "fold", "name": "Pop", "nodes": [
+      { "type": "literal", "value": "stellar-evolution-memory" }
+    ]},
+    { "type": "fold", "name": "Wo", "nodes": [
+      { "type": "assign", "target": "query",
+        "value": { "type": "ref", "name": "input.subject" } },
+      { "type": "assign", "target": "relations",
+        "value": { "type": "literal", "value": [
+          "precedes", "causes", "correlates", "contradicts",
+          "descends_from", "requires", "enables"
+        ] } }
+    ]},
+    { "type": "fold", "name": "Yax", "nodes": [
+      { "type": "call", "name": "invoke", "args": [
+        { "type": "ref", "name": "MEM-u" },
+        { "type": "ref", "name": "query" }
+      ] },
+      { "type": "assign", "target": "candidate_notes",
+        "value": { "type": "ref", "name": "retrieved" } },
+
+      { "type": "call", "name": "classify", "args": [
+        { "type": "ref", "name": "candidate_notes" }
+      ] },
+      { "type": "assign", "target": "evidence_classes",
+        "value": { "type": "ref", "name": "classified" } }
+    ]},
+    { "type": "fold", "name": "Sek", "nodes": [
+      { "type": "call", "name": "invoke", "args": [
+        { "type": "ref", "name": "RESEARCH-u" },
+        { "type": "ref", "name": "evidence_classes" }
+      ] },
+      { "type": "assign", "target": "relationships",
+        "value": { "type": "ref", "name": "related" } },
+
+      { "type": "call", "name": "invoke", "args": [
+        { "type": "ref", "name": "VERIFY-u" },
+        { "type": "ref", "name": "relationships" }
+      ] },
+      { "type": "assign", "target": "conflicts",
+        "value": { "type": "ref", "name": "verified" } }
+    ]},
+    { "type": "fold", "name": "Ch'en", "nodes": [
+      { "type": "emit", "value": {
+        "type": "literal", "value": {
+          "memory_page": "subject",
+          "evidence": "evidence_classes",
+          "timeline": "relationships",
+          "conflicts": "conflicts",
+          "confidence": null
+        }
+      } }
+    ]},
+    { "type": "fold", "name": "Xul", "nodes": [
+      { "type": "if", "test": {
+        "type": "op", "op": ">",
+        "args": [
+          { "type": "ref", "name": "conflicts.count" },
+          { "type": "literal", "value": 0 }
+        ]
+      },
+        "then": { "type": "block", "nodes": [
+          { "type": "call", "name": "write_note", "args": [
+            { "type": "ref", "name": "query" },
+            { "type": "literal", "value": "contradiction detected" },
+            { "type": "literal", "value": "correction" }
+          ] },
+          { "type": "call", "name": "fold", "args": [
+            { "type": "literal", "value": "stellar-evolution-memory" }
+          ] }
+        ] },
+        "else": { "type": "block", "nodes": [
+          { "type": "call", "name": "mem_save", "args": [
+            { "type": "literal", "value": "stellar.memory.resolved" },
+            { "type": "ref", "name": "relationships" }
+          ] },
+          { "type": "call", "name": "collapse", "args": [
+            { "type": "literal", "value": "stellar-evolution-memory" }
+          ] }
+        ] }
+      }
+    ]}
+  ]
+}

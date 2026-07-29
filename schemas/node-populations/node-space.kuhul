@@ -1,0 +1,102 @@
+{
+  "kuhul": "2.0.0",
+  "type": "node_population",
+  "meta": {
+    "name": "Space Domain Node Population",
+    "version": "1.0.0",
+    "description": "Semantic @nodes used by the SPACE domain. Demonstrates that ELIZA-style mechanics are node-level, not domain-level.",
+    "conformance_version": "2.0.0"
+  },
+  "nodes": [
+    {
+      "id": "space_hypothesis",
+      "name": "hypothesis",
+      "pattern": "\\b(what if|could it be|maybe|perhaps|hypothesis|theory|model)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Yax",
+      "tags": ["space", "astrophysics"],
+      "intent": "hypothesis_probe",
+      "response_templates": [
+        "What hypothesis are you exploring about (0)?",
+        "How would you test the idea that (0)?",
+        "What evidence would confirm or refute (0)?"
+      ],
+      "relations": [
+        ["{match}", "is_a", "hypothesis"],
+        ["hypothesis", "requires", "evidence"]
+      ]
+    },
+    {
+      "id": "space_causality",
+      "name": "causality",
+      "pattern": "\\b(because|causes|caused by|leads to|results in|why does|due to)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Yax",
+      "tags": ["space", "astrophysics"],
+      "intent": "causal_probe",
+      "response_templates": [
+        "What mechanism connects (0)?",
+        "Is that correlation or causation?",
+        "What intermediate process links (0)?"
+      ],
+      "relations": [
+        ["{match}", "asserts", "causality"],
+        ["causality", "needs", "mechanism"]
+      ]
+    },
+    {
+      "id": "space_evidence",
+      "name": "evidence",
+      "pattern": "\\b(evidence|observation|data|measurement|detected|saw|image|spectrum)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Pop",
+      "tags": ["space", "astrophysics"],
+      "intent": "evidence_request",
+      "response_templates": [
+        "What observation supports (0)?",
+        "How was that evidence collected?",
+        "Can that evidence be reproduced?"
+      ],
+      "relations": [
+        ["{match}", "is", "evidence"],
+        ["evidence", "supports", "claim"]
+      ]
+    },
+    {
+      "id": "space_uncertainty",
+      "name": "uncertainty",
+      "pattern": "\\b(uncertain|not sure|unknown|approximate|error bar|confidence|probably)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Ch'en",
+      "tags": ["space", "astrophysics"],
+      "intent": "uncertainty_probe",
+      "response_templates": [
+        "What is the source of that uncertainty?",
+        "How could the uncertainty be reduced?",
+        "Does the uncertainty change the conclusion?"
+      ],
+      "relations": [
+        ["{match}", "indicates", "uncertainty"],
+        ["uncertainty", "bounds", "confidence"]
+      ]
+    },
+    {
+      "id": "space_counterexample",
+      "name": "counterexample",
+      "pattern": "\\b(counterexample|refutation|disprove|contradict|exception|but what about)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Ch'en",
+      "tags": ["space", "astrophysics"],
+      "intent": "counterexample_probe",
+      "response_templates": [
+        "What would falsify that claim?",
+        "Are there known exceptions to (0)?",
+        "How does the theory handle (0)?"
+      ],
+      "relations": [
+        ["{match}", "challenges", "claim"],
+        ["claim", "needs", "defense"]
+      ]
+    }
+  ]
+}

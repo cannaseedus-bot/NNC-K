@@ -1,0 +1,32 @@
+{
+  "name": "dark",
+  "version": "1.0",
+  "colors": {
+    "window": "#0d1117",
+    "panel": "#161b22",
+    "border": "#30363d",
+    "input": "#0d1117",
+    "input_text": "#e2e8f0",
+    "input_caret": "#58a6ff",
+    "text": "#e2e8f0",
+    "text_muted": "#8b949e",
+    "text_dim": "#585e6b",
+    "accent": "#58a6ff",
+    "accent_bg": "#1f6feb",
+    "success": "#3fb950",
+    "success_bg": "#238636",
+    "warning": "#d29922",
+    "error": "#f85149",
+    "error_bg": "#da3633",
+    "selection": "#1f6feb",
+    "selection_text": "#ffffff",
+    "hover": "#21262d",
+    "tab_bg": "#161b22",
+    "tab_active": "#0d1117",
+    "tab_text": "#e2e8f0",
+    "tab_hover": "#21262d",
+    "scrollbar": "#30363d",
+    "scrollbar_thumb": "#484f58",
+    "transparent": "Transparent"
+  }
+}

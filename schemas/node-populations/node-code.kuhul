@@ -1,0 +1,102 @@
+{
+  "kuhul": "2.0.0",
+  "type": "node_population",
+  "meta": {
+    "name": "Code Domain Node Population",
+    "version": "1.0.0",
+    "description": "Semantic @nodes used by the CODE domain. Demonstrates that ELIZA-style mechanics are node-level, not domain-level.",
+    "conformance_version": "2.0.0"
+  },
+  "nodes": [
+    {
+      "id": "code_decomposition",
+      "name": "decomposition",
+      "pattern": "\\b(break down|split|divide|components|modules|functions|steps|subtasks)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Yax",
+      "tags": ["code", "programming"],
+      "intent": "decomposition_probe",
+      "response_templates": [
+        "What are the smallest independent parts of (0)?",
+        "Which component owns (0)?",
+        "How would you split (0) into smaller responsibilities?"
+      ],
+      "relations": [
+        ["{match}", "requires", "decomposition"],
+        ["decomposition", "produces", "components"]
+      ]
+    },
+    {
+      "id": "code_causality",
+      "name": "causality",
+      "pattern": "\\b(because|causes|leads to|results in|triggers|invokes|calls|depends on)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Yax",
+      "tags": ["code", "programming"],
+      "intent": "causal_probe",
+      "response_templates": [
+        "Which call chain produces (0)?",
+        "What state change causes (0)?",
+        "Is that dependency explicit or hidden?"
+      ],
+      "relations": [
+        ["{match}", "expresses", "causality"],
+        ["causality", "traces_to", "root_cause"]
+      ]
+    },
+    {
+      "id": "code_contradiction",
+      "name": "contradiction",
+      "pattern": "\\b(bug|error|fail|exception|wrong|inconsistent|doesn't work|not working|crash)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Ch'en",
+      "tags": ["code", "programming"],
+      "intent": "contradiction_probe",
+      "response_templates": [
+        "What behavior contradicts the expected invariant?",
+        "What is the simplest input that reproduces (0)?",
+        "Which assumption does (0) violate?"
+      ],
+      "relations": [
+        ["{match}", "is", "contradiction"],
+        ["contradiction", "violates", "invariant"]
+      ]
+    },
+    {
+      "id": "code_evidence",
+      "name": "evidence",
+      "pattern": "\\b(log|trace|test|assert|output|result|return value|stack trace)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Pop",
+      "tags": ["code", "programming"],
+      "intent": "evidence_request",
+      "response_templates": [
+        "What does the test or log say about (0)?",
+        "Can you reproduce (0) with a minimal example?",
+        "What is the actual output versus expected?"
+      ],
+      "relations": [
+        ["{match}", "is", "evidence"],
+        ["evidence", "grounds", "diagnosis"]
+      ]
+    },
+    {
+      "id": "code_debugging",
+      "name": "debugging",
+      "pattern": "\\b(debug|debugger|breakpoint|inspect|step through|profile|memory leak|race condition)\\b",
+      "neighborhood": "THOUGHT",
+      "fold": "Sek",
+      "tags": ["code", "programming"],
+      "intent": "debugging_probe",
+      "response_templates": [
+        "What invariant fails first when you step through (0)?",
+        "Which observation narrows the search space?",
+        "How would you bisect the cause of (0)?"
+      ],
+      "relations": [
+        ["{match}", "requires", "debugging"],
+        ["debugging", "isolates", "fault"]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "kuhul": "2.0.0",
+  "type": "program",
+  "meta": {
+    "name": "ASX RAM Attention Fold Router",
+    "description": "Maps K'UHUL attention folds to the asx_ram.exe D3D11 compute sidecar. The sidecar streams Q/K/V shards through a 3-slot GPU window and returns a context vector per lane.",
+    "version": "1.0.0",
+    "sidecar": "bin/asx_ram.exe"
+  },
+  "phases": ["Pop", "Wo", "Yax", "Sek", "Ch'en", "Xul"],
+  "folds": {
+    "reasoning": { "weight": 0.35, "phase": "Sek", "ops": ["softmax", "weighted_sum", "normalize"] },
+    "memory":    { "weight": 0.25, "phase": "Pop", "ops": ["retrieve", "rank", "recall"] },
+    "security":  { "weight": 0.20, "phase": "Ch'en", "ops": ["guard", "filter", "validate"] },
+    "creativity":{ "weight": 0.15, "phase": "Yax", "ops": ["combine", "mutate", "generate"] },
+    "execution": { "weight": 0.05, "phase": "Sek", "ops": ["dispatch", "schedule", "commit"] }
+  },
+  "sidecar_binding": {
+    "executable": "bin/asx_ram.exe",
+    "arguments": ["{q_shard}", "{k_shard}", "{v_shard}", "1", "--prefetch"],
+    "input_schema": {
+      "q_shard": "path to Q xshard file",
+      "k_shard": "path to K xshard file",
+      "v_shard": "path to V xshard file"
+    },
+    "output_format": "stdout text",
+    "authority_note": "The sidecar performs compute only; it does not create, update, merge, or promote micronauts."
+  },
+  "nodes": [
+    {
+      "id": "attention::attend",
+      "pattern": "^attention::attend$",
+      "neighborhood": "THOUGHT",
+      "fold": "Sek",
+      "intent": "attention_score_map",
+      "response_templates": [
+        "Calculating attention distribution across folds...",
+        "Ranking reasoning lanes for query (0)."
+      ]
+    },
+    {
+      "id": "attention::execute_lane",
+      "pattern": "^attention::execute_lane$",
+      "neighborhood": "THOUGHT",
+      "fold": "Sek",
+      "intent": "dispatch_lane",
+      "response_templates": [
+        "Dispatching (0) to fold lane (1).",
+        "Streaming Q/K/V shards for lane (1)."
+      ]
+    }
+  ]
+}

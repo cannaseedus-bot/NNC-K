@@ -1,0 +1,13 @@
+{
+  "$schema": "mathml-tensor-v1",
+  "expression": {
+    "type": "apply",
+    "operator": "sigmoid",
+    "left": {"type": "vector", "data": [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]}
+  },
+  "metadata": {
+    "name": "sigmoid-vector-7",
+    "description": "Sigmoid activation on a 7-element vector — maps all values to (0,1)",
+    "source": "asx.mathml.nnc.xsd.neural_grammar.v1 @examples.sigmoid_vector"
+  }
+}

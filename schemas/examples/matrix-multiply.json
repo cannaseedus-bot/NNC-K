@@ -1,0 +1,14 @@
+{
+  "$schema": "mathml-tensor-v1",
+  "expression": {
+    "type": "apply",
+    "operator": "matmul",
+    "left": {"type": "matrix", "data": [[1.0, 2.0], [3.0, 4.0]]},
+    "right": {"type": "matrix", "data": [[5.0, 6.0], [7.0, 8.0]]}
+  },
+  "metadata": {
+    "name": "matrix-multiply-2x2",
+    "description": "2x2 matrix multiplication example from the MathML+NNC+XSD neural grammar contract",
+    "source": "asx.mathml.nnc.xsd.neural_grammar.v1 @examples.matrix_multiply"
+  }
+}

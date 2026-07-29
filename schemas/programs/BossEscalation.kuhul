@@ -1,0 +1,43 @@
+{
+  "kuhul": "1.0",
+  "type": "program",
+  "folds": [
+    { "type": "fold", "name": "Pop", "nodes": [
+      { "type": "literal", "value": "BossEscalation" }
+    ] },
+    { "type": "fold", "name": "Wo", "nodes": [
+      { "type": "assign", "target": "model_profile", "value": { "type": "literal", "value": "BASE" } },
+      { "type": "assign", "target": "escalation_model", "value": { "type": "literal", "value": "BOSS" } }
+    ] },
+    { "type": "fold", "name": "Yax", "nodes": [
+      { "type": "call", "name": "classify", "args": [{ "type": "ref", "name": "input.prompt" }] },
+      { "type": "if", "test": { "type": "op", "op": "<", "args": [{ "type": "ref", "name": "base_result.confidence" }, { "type": "literal", "value": 0.75 }] },
+        "then": { "type": "block", "nodes": [{ "type": "assign", "target": "escalate", "value": { "type": "literal", "value": true } }] }
+      },
+      { "type": "if", "test": { "type": "op", "op": ">", "args": [{ "type": "ref", "name": "base_result.contradictions" }, { "type": "literal", "value": 0 }] },
+        "then": { "type": "block", "nodes": [{ "type": "assign", "target": "escalate", "value": { "type": "literal", "value": true } }] }
+      }
+    ] },
+    { "type": "fold", "name": "Sek", "nodes": [
+      { "type": "call", "name": "invoke", "args": [{ "type": "ref", "name": "BASE" }, { "type": "ref", "name": "input.prompt" }] },
+      { "type": "if", "test": { "type": "ref", "name": "escalate" },
+        "then": { "type": "block", "nodes": [
+          { "type": "call", "name": "invoke", "args": [{ "type": "ref", "name": "BOSS" }, { "type": "ref", "name": "input.prompt" }, { "type": "ref", "name": "base_result" }] }
+        ] }
+      }
+    ] },
+    { "type": "fold", "name": "Ch'en", "nodes": [
+      { "type": "emit", "value": { "type": "ref", "name": "result" } }
+    ] },
+    { "type": "fold", "name": "Xul", "nodes": [
+      { "type": "if", "test": { "type": "ref", "name": "result.complete" },
+        "then": { "type": "block", "nodes": [
+          { "type": "call", "name": "collapse", "args": [{ "type": "literal", "value": "BossEscalation" }] }
+        ] },
+        "else": { "type": "block", "nodes": [
+          { "type": "call", "name": "fold", "args": [{ "type": "literal", "value": "BossEscalation" }] }
+        ] }
+      }
+    ] }
+  ]
+}

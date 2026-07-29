@@ -1,0 +1,17 @@
+{
+  "kuhul": "1.0",
+  "type": "program",
+  "folds": [
+    { "type": "fold", "name": "Pop", "nodes": [{ "type": "literal", "value": "MyPersonality" }] },
+    { "type": "fold", "name": "Wo", "nodes": [
+      { "type": "assign", "target": "role", "value": { "type": "literal", "value": "assistant" } },
+      { "type": "assign", "target": "state", "value": { "type": "literal", "value": {} } }
+    ] },
+    { "type": "fold", "name": "Yax", "nodes": [{ "type": "ref", "name": "input" }] },
+    { "type": "fold", "name": "Sek", "nodes": [{ "type": "call", "name": "invoke", "args": [{ "type": "ref", "name": "role" }, { "type": "ref", "name": "input" }] }] },
+    { "type": "fold", "name": "Ch'en", "nodes": [{ "type": "emit", "value": { "type": "ref", "name": "result" } }] },
+    { "type": "fold", "name": "Xul", "nodes": [
+      { "type": "if", "test": { "type": "op", "op": "==", "args": [{ "type": "ref", "name": "done" }, { "type": "literal", "value": true }] },
+        "then": { "type": "block", "nodes": [{ "type": "call", "name": "collapse", "args": [{ "type": "literal", "value": "MyPersonality" }] }] } } ] }
+  ]
+}

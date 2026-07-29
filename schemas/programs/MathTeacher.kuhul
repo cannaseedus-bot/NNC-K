@@ -1,0 +1,208 @@
+{
+  "kuhul": "1.0",
+  "type": "program",
+  "folds": [
+    {
+      "type": "fold", "name": "Pop", "nodes": [
+        { "type": "literal", "value": "MathTeacher" }
+      ]
+    },
+    {
+      "type": "fold", "name": "Wo", "nodes": [
+        {
+          "type": "assign", "target": "personality",
+          "value": {
+            "type": "literal", "value": {
+              "role": "math_teacher",
+              "tone": "clear",
+              "patience": 0.95,
+              "rigor": 0.92,
+              "verbosity": 0.55,
+              "encouragement": 0.70,
+              "answer_directness": 0.85,
+              "show_work": true,
+              "verify_results": true
+            }
+          }
+        },
+        {
+          "type": "assign", "target": "mixture",
+          "value": {
+            "type": "literal", "value": {
+              "REASON-u": 0.30,
+              "PLAN-u": 0.15,
+              "MATH-u": 0.30,
+              "MEM-u": 0.10,
+              "CREATE-u": 0.05,
+              "VERIFY-u": 0.10
+            }
+          }
+        },
+        {
+          "type": "assign", "target": "student",
+          "value": {
+            "type": "call", "name": "mem_load", "args": [
+              { "type": "literal", "value": "math.student_state" }
+            ]
+          }
+        },
+        {
+          "type": "assign", "target": "failed_attempts",
+          "value": { "type": "literal", "value": 0 }
+        }
+      ]
+    },
+    {
+      "type": "fold", "name": "Yax", "nodes": [
+        {
+          "type": "call", "name": "classify_math", "args": [
+            { "type": "ref", "name": "input.question" }
+          ]
+        },
+        {
+          "type": "assign", "target": "topic",
+          "value": { "type": "ref", "name": "topic_output" }
+        },
+        {
+          "type": "call", "name": "estimate_difficulty", "args": [
+            { "type": "ref", "name": "input.question" },
+            { "type": "ref", "name": "student" }
+          ]
+        },
+        {
+          "type": "assign", "target": "difficulty",
+          "value": { "type": "ref", "name": "difficulty_output" }
+        },
+        {
+          "type": "call", "name": "estimate_readiness", "args": [
+            { "type": "ref", "name": "student" },
+            { "type": "ref", "name": "topic" }
+          ]
+        },
+        {
+          "type": "assign", "target": "readiness",
+          "value": { "type": "ref", "name": "readiness_output" }
+        }
+      ]
+    },
+    {
+      "type": "fold", "name": "Sek", "nodes": [
+        {
+          "type": "if", "test": {
+            "type": "op", "op": "<",
+            "args": [ { "type": "ref", "name": "readiness" }, { "type": "ref", "name": "difficulty" } ]
+          },
+          "then": { "type": "block", "nodes": [
+            { "type": "call", "name": "invoke", "args": [
+              { "type": "ref", "name": "PLAN-u" }, { "type": "ref", "name": "input.question" }
+            ] },
+            { "type": "assign", "target": "lesson_steps", "value": { "type": "ref", "name": "plan_output" } },
+            { "type": "call", "name": "invoke", "args": [
+              { "type": "ref", "name": "CREATE-u" }, { "type": "ref", "name": "lesson_steps" }
+            ] },
+            { "type": "assign", "target": "example", "value": { "type": "ref", "name": "create_output" } }
+          ] }
+        },
+        {
+          "type": "if", "test": {
+            "type": "op", "op": ">=",
+            "args": [ { "type": "ref", "name": "readiness" }, { "type": "ref", "name": "difficulty" } ]
+          },
+          "then": { "type": "block", "nodes": [
+            { "type": "call", "name": "invoke", "args": [
+              { "type": "ref", "name": "MATH-u" }, { "type": "ref", "name": "input.question" }
+            ] },
+            { "type": "assign", "target": "solution", "value": { "type": "ref", "name": "math_output" } },
+            { "type": "call", "name": "invoke", "args": [
+              { "type": "ref", "name": "REASON-u" }, { "type": "ref", "name": "solution" }
+            ] },
+            { "type": "assign", "target": "reasoning", "value": { "type": "ref", "name": "reason_output" } },
+            { "type": "call", "name": "invoke", "args": [
+              { "type": "ref", "name": "VERIFY-u" }, { "type": "ref", "name": "solution" }
+            ] },
+            { "type": "assign", "target": "proof", "value": { "type": "ref", "name": "verify_output" } },
+            { "type": "if", "test": {
+              "type": "op", "op": "==",
+              "args": [ { "type": "ref", "name": "proof.valid" }, { "type": "literal", "value": false } ]
+            },
+            "then": { "type": "block", "nodes": [
+              { "type": "call", "name": "invoke", "args": [
+                { "type": "ref", "name": "MATH-u" }, { "type": "ref", "name": "solution" }, { "type": "ref", "name": "proof" }
+              ] },
+              { "type": "assign", "target": "solution", "value": { "type": "ref", "name": "repaired" } },
+              { "type": "call", "name": "invoke", "args": [
+                { "type": "ref", "name": "VERIFY-u" }, { "type": "ref", "name": "solution" }
+              ] },
+              { "type": "assign", "target": "proof", "value": { "type": "ref", "name": "reverify_output" } }
+            ] } }
+          ] }
+        },
+        {
+          "type": "if", "test": {
+            "type": "op", "op": ">=",
+            "args": [ { "type": "ref", "name": "failed_attempts" }, { "type": "literal", "value": 2 } ]
+          },
+          "then": { "type": "block", "nodes": [
+            { "type": "op", "op": "+=", "args": [
+              { "type": "ref", "name": "personality.patience" }, { "type": "literal", "value": 0.03 }
+            ] },
+            { "type": "op", "op": "+=", "args": [
+              { "type": "ref", "name": "personality.verbosity" }, { "type": "literal", "value": 0.1 }
+            ] },
+            { "type": "op", "op": "+=", "args": [
+              { "type": "ref", "name": "mixture.PLAN-u" }, { "type": "literal", "value": 0.15 }
+            ] },
+            { "type": "op", "op": "+=", "args": [
+              { "type": "ref", "name": "mixture.CREATE-u" }, { "type": "literal", "value": 0.1 }
+            ] }
+          ] }
+        },
+        {
+          "type": "call", "name": "mem_save", "args": [
+            { "type": "literal", "value": "math.student_state" },
+            {
+              "type": "literal", "value": {
+                "topic": "topic", "difficulty": "difficulty",
+                "failed_attempts": "failed_attempts"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "fold", "name": "Ch'en", "nodes": [
+        {
+          "type": "emit", "value": {
+            "type": "literal", "value": {
+              "explanation": "reasoning",
+              "solution": "solution",
+              "example": "example",
+              "verification": "proof",
+              "tone": "personality.tone",
+              "verbosity": "personality.verbosity",
+              "encouragement": "personality.encouragement",
+              "mixture": "mixture"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold", "name": "Xul", "nodes": [
+        {
+          "type": "if", "test": {
+            "type": "op", "op": "==",
+            "args": [ { "type": "ref", "name": "input.more" }, { "type": "literal", "value": false } ]
+          },
+          "then": { "type": "block", "nodes": [
+            { "type": "call", "name": "collapse", "args": [{ "type": "literal", "value": "MathTeacher" }] }
+          ] },
+          "else": { "type": "block", "nodes": [
+            { "type": "call", "name": "fold", "args": [{ "type": "literal", "value": "MathTeacher" }] }
+          ] }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "kuhul": "2.0.0",
+  "folds": [
+    {
+      "name": "Pop",
+      "nodes": [
+        {
+          "value": "eliza",
+          "type": "literal"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Wo",
+      "nodes": [
+        {
+          "value": {
+            "value": "eliza",
+            "type": "literal"
+          },
+          "target": "domain",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "value": {
+              "eliza-therapist-µ": 1.0
+            },
+            "type": "literal"
+          },
+          "target": "mixture",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "value": {
+              "evidence": [],
+              "relations": [],
+              "notation": []
+            },
+            "type": "literal"
+          },
+          "target": "state",
+          "type": "assign"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Yax",
+      "nodes": [
+        {
+          "name": "state.notation",
+          "type": "ref"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Sek",
+      "nodes": [
+        {
+          "value": {
+            "name": "eliza-therapist-µ",
+            "type": "ref"
+          },
+          "target": "note_eliza-therapist",
+          "type": "assign"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Ch'en",
+      "nodes": [
+        {
+          "value": {
+            "value": {
+              "contributions": "state.evidence",
+              "domain": "eliza"
+            },
+            "type": "literal"
+          },
+          "type": "emit"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Xul",
+      "nodes": [
+        {
+          "name": "collapse",
+          "args": [
+            {
+              "value": "eliza",
+              "type": "literal"
+            }
+          ],
+          "type": "call"
+        }
+      ],
+      "type": "fold"
+    }
+  ],
+  "type": "program",
+  "meta": {
+    "name": "eliza Domain Program",
+    "version": "1.0.0",
+    "conformance_version": "2.0.0",
+    "description": "Auto-generated domain program for eliza micronauts",
+    "required_micronauts": [
+      "eliza-therapist-µ"
+    ]
+  }
+}

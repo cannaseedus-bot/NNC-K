@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cf:ChatFeed xmlns:cf="http://kuhul.io/chat-feed/v1"
+             xmlns:k="http://kuhul.io/schema/v3"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://kuhul.io/chat-feed/v1 chat-feed.xsd"
+             version="1.0"
+             feedId="feed-2026-07-20"
+             created="2026-07-20T03:28:00Z"
+             totalTurns="8">
+
+  <!-- Session 1: Scaffolding the Neural Grammar system -->
+  <cf:ChatSession id="session-001"
+                  topic="Project Scaffolding"
+                  phase="Xul"
+                  started="2026-07-20T02:54:00Z"
+                  ended="2026-07-20T03:28:00Z"
+                  turnCount="8">
+
+    <cf:ChatTurn seq="1" phase="Pop" timestamp="2026-07-20T02:54:00Z">
+      <cf:UserMessage role="user" tokenCount="12" intent="scaffold">
+        Scaffold the full project — create all directories and files from the paste.
+      </cf:UserMessage>
+      <cf:SystemResponse role="system" target="MM-1" fold="COMPUTE_FOLD" confidence="0.95">
+        Created 14 files across src/NeuralGrammar.Core/, scripts/, schemas/, .holotape/. C# core, PowerShell modules, XSD schema, NNC sample program, holotape manifest.
+      </cf:SystemResponse>
+      <cf:TurnMetrics latencyMs="3200" tokensIn="12" tokensOut="28" cacheHit="false" hash="sha256:a1b2c3"/>
+    </cf:ChatTurn>
+
+    <cf:ChatTurn seq="2" phase="Sek" timestamp="2026-07-20T03:00:00Z">
+      <cf:UserMessage role="user" tokenCount="8" intent="contract">
+        Proceed — XCFE runtime authority contract.
+      </cf:UserMessage>
+      <cf:SystemResponse role="system" target="CM-1" fold="CONTROL_FOLD" confidence="0.88">
+        Built XCFE verifier, policy engine, runtime walker, stdlib registry. All 8 verification rules implemented.
+      </cf:SystemResponse>
+      <cf:MathMLBlock operator="none" result="none" engine="skipped"/>
+      <cf:TurnMetrics latencyMs="4100" tokensIn="8" tokensOut="18" cacheHit="false" hash="sha256:d4e5f6"/>
+    </cf:ChatTurn>
+
+    <cf:ChatTurn seq="3" phase="Sek" timestamp="2026-07-20T03:05:00Z">
+      <cf:UserMessage role="user" tokenCount="6" intent="contract">
+        Micronaut factory and worker host contract.
+      </cf:UserMessage>
+      <cf:SystemResponse role="system" target="HM-1" fold="STATE_FOLD" confidence="0.91">
+        Built MicronautRuntime with factory pipeline (create->validate->SCXQ2 pack->BSON bind), worker dispatch, route registry.
+      </cf:SystemResponse>
+      <cf:TurnMetrics latencyMs="2800" tokensIn="6" tokensOut="15" cacheHit="false" hash="sha256:g7h8i9"/>
+    </cf:ChatTurn>
+
+    <cf:ChatTurn seq="4" phase="Wo" timestamp="2026-07-20T03:10:00Z">
+      <cf:UserMessage role="user" tokenCount="10" intent="contract">
+        Glyph opcode registry, phase manifold, node contract.
+      </cf:UserMessage>
+      <cf:SystemResponse role="system" target="VM-2" fold="META_FOLD" confidence="0.93">
+        Built GlyphRegistry with 6 fold glyphs + 7 structural + 5 geometry. FoldAlgebra with transitions, gravity wells, node activation.
+      </cf:SystemResponse>
+      <cf:MathMLBlock operator="rotation" engine="kuhul">
+        Glyphs resolve through Φn.αn.λlane notation. 6-phase fold cycle: ◉→⬢→△→✦→◇→⬡.
+      </cf:MathMLBlock>
+      <cf:TurnMetrics latencyMs="3600" tokensIn="10" tokensOut="22" cacheHit="false" hash="sha256:j0k1l2"/>
+    </cf:ChatTurn>
+
+    <cf:ChatTurn seq="5" phase="Sek" timestamp="2026-07-20T03:15:00Z">
+      <cf:UserMessage role="user" tokenCount="7" intent="contract">
+        Unified IR vector surface spec.
+      </cf:UserMessage>
+      <cf:SystemResponse role="system" target="SM-1" fold="STORAGE_FOLD" confidence="0.87">
+        Built UnifiedIREngine with full op dispatch (linalg, geometry, SVG screen), replay log, EBNF program parser.
+      </cf:SystemResponse>
+      <cf:NNCBlock schema="asx-nnc-v1" programName="tiny-character-loop">
+        Ops: [path_from_tensor, surface_compose, rotate(0.01pi), render]
+      </cf:NNCBlock>
+      <cf:TurnMetrics latencyMs="5200" tokensIn="7" tokensOut="30" cacheHit="false" hash="sha256:m3n4o5"/>
+    </cf:ChatTurn>
+
+    <cf:ChatTurn seq="6" phase="Sek" timestamp="2026-07-20T03:20:00Z">
+      <cf:UserMessage role="user" tokenCount="5" intent="routing">
+        Micronaut brains and n-gram routing.
+      </cf:UserMessage>
+      <cf:SystemResponse role="system" target="PM-1" fold="DATA_FOLD" confidence="0.94">
+        Built BrainRouter with 9 profiles, n-gram intent routing, fallback to XM-1. CascadeRouter with 3-tier: exact→LoRA→expansion.
+      </cf:SystemResponse>
+      <cf:MathMLBlock operator="add" engine="kuhul" result="9 profiles, 45 tools">
+        BrainRouter profiles: CM-1 + PM-1 + TM-1 + HM-1 + SM-1 + MM-1 + XM-1 + VM-1 + VM-2
+      </cf:MathMLBlock>
+      <cf:TurnMetrics latencyMs="3800" tokensIn="5" tokensOut="20" cacheHit="true" hash="sha256:p6q7r8"/>
+    </cf:ChatTurn>
+
+    <cf:ChatTurn seq="7" phase="Sek" timestamp="2026-07-20T03:25:00Z">
+      <cf:UserMessage role="user" tokenCount="4" intent="search">
+        Hybrid search with inverted index and LoRA.
+      </cf:UserMessage>
+      <cf:SystemResponse role="system" target="XM-1" fold="PATTERN_FOLD" confidence="0.90">
+        Built HybridSearch (BM25 + cosine similarity), LoRAAdapter (rank-16 power iteration SVD), token cache for exact-match short-circuit.
+      </cf:SystemResponse>
+      <cf:TurnMetrics latencyMs="2900" tokensIn="4" tokensOut="16" cacheHit="false" hash="sha256:s9t0u1"/>
+    </cf:ChatTurn>
+
+    <cf:ChatTurn seq="8" phase="Xul" timestamp="2026-07-20T03:28:00Z">
+      <cf:UserMessage role="user" tokenCount="9" intent="feed">
+        Make chat/history a feed with XSD/XML so the math engines can ingest it.
+      </cf:UserMessage>
+      <cf:SystemResponse role="system" target="VM-1" fold="UI_FOLD" confidence="0.96">
+        Created chat-feed.xsd schema, sample feed XML, ChatFeed C# reader/writer, and PowerShell module. Feed is directly consumable by XSDParser, HybridSearch, and LoRAAdapter.
+      </cf:SystemResponse>
+      <cf:MathMLBlock operator="none" engine="kuhul" result="feed ingested">
+        ChatFeed → XSDParser validates → HybridSearch indexes → LoRAAdapter trains → CascadeRouter routes
+      </cf:MathMLBlock>
+      <cf:TurnMetrics latencyMs="1500" tokensIn="9" tokensOut="24" cacheHit="true" hash="sha256:v2w3x4"/>
+    </cf:ChatTurn>
+
+    <cf:SessionMeta adapterId="lora-scaffolding-v1" loraHash="sha256:l0r4d3m">
+      <cf:Tag>scaffold</cf:Tag>
+      <cf:Tag>contract</cf:Tag>
+      <cf:Tag>runtime</cf:Tag>
+      <cf:Tag>hybrid-search</cf:Tag>
+      <cf:Token>micronaut</cf:Token>
+      <cf:Token>fold</cf:Token>
+      <cf:Token>lora</cf:Token>
+      <cf:Token>gravity-well</cf:Token>
+      <cf:Token>xsd</cf:Token>
+      <cf:GravityWell>Sek#0.95</cf:GravityWell>
+      <cf:GravityWell>Xul#0.92</cf:GravityWell>
+    </cf:SessionMeta>
+  </cf:ChatSession>
+
+</cf:ChatFeed>

@@ -1,0 +1,153 @@
+{
+  "kuhul": "1.0",
+  "type": "program",
+  "folds": [
+    {
+      "type": "fold",
+      "name": "Pop",
+      "nodes": [{ "type": "literal", "value": "investigate" }]
+    },
+    {
+      "type": "fold",
+      "name": "Wo",
+      "nodes": [
+        {
+          "type": "assign",
+          "target": "claim",
+          "value": { "type": "ref", "name": "input.claim" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Yax",
+      "nodes": [
+        {
+          "type": "call",
+          "name": "decompose",
+          "args": [{ "type": "ref", "name": "claim" }]
+        },
+        {
+          "type": "assign",
+          "target": "questions",
+          "value": { "type": "ref", "name": "decomposed" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Sek",
+      "nodes": [
+        {
+          "type": "call",
+          "name": "invoke",
+          "args": [
+            { "type": "ref", "name": "NET-U" },
+            { "type": "ref", "name": "questions" }
+          ]
+        },
+        {
+          "type": "assign",
+          "target": "evidence",
+          "value": { "type": "ref", "name": "net_output" }
+        },
+        {
+          "type": "call",
+          "name": "classify",
+          "args": [{ "type": "ref", "name": "evidence" }]
+        },
+        {
+          "type": "assign",
+          "target": "sources",
+          "value": { "type": "ref", "name": "classified" }
+        },
+        {
+          "type": "call",
+          "name": "compare",
+          "args": [{ "type": "ref", "name": "sources" }]
+        },
+        {
+          "type": "assign",
+          "target": "agreement",
+          "value": { "type": "ref", "name": "comparison_output" }
+        },
+        {
+          "type": "call",
+          "name": "detect_contradiction",
+          "args": [{ "type": "ref", "name": "sources" }]
+        },
+        {
+          "type": "assign",
+          "target": "conflicts",
+          "value": { "type": "ref", "name": "contradiction_output" }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Ch'en",
+      "nodes": [
+        {
+          "type": "emit",
+          "value": {
+            "type": "literal",
+            "value": {
+              "evidence": "evidence",
+              "agreement": "agreement",
+              "conflicts": "conflicts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Xul",
+      "nodes": [
+        {
+          "type": "if",
+          "test": {
+            "type": "op", "op": ">=",
+            "args": [
+              { "type": "ref", "name": "agreement" },
+              { "type": "literal", "value": 0.85 }
+            ]
+          },
+          "then": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "accept",
+                "args": [
+                  { "type": "ref", "name": "claim" },
+                  { "type": "ref", "name": "knowledge" }
+                ]
+              }
+            ]
+          },
+          "else": {
+            "type": "block",
+            "nodes": [
+              {
+                "type": "call",
+                "name": "derive_missing_questions",
+                "args": [{ "type": "ref", "name": "conflicts" }]
+              },
+              {
+                "type": "assign",
+                "target": "questions",
+                "value": { "type": "ref", "name": "derived" }
+              },
+              {
+                "type": "call",
+                "name": "fold",
+                "args": [{ "type": "literal", "value": "investigate" }]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

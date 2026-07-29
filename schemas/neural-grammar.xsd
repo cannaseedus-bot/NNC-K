@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:k="http://kuhul.io/schema/v3">
+  <xs:element name="Fold">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="k:Node" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="k:NNC" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="id" type="k:Identifier" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Node">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="k:Micronaut" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="id" type="k:Identifier" use="required"/>
+      <xs:attribute name="phase" type="k:PhaseType" default="Pop"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Micronaut">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="k:Skills" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="id" type="k:Identifier" use="required"/>
+      <xs:attribute name="role" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="NNC">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="k:Program"/>
+      </xs:sequence>
+      <xs:attribute name="schema" type="xs:string" default="asx-nnc-v1"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="PhaseType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Pop"/>
+      <xs:enumeration value="Wo"/>
+      <xs:enumeration value="Yax"/>
+      <xs:enumeration value="Sek"/>
+      <xs:enumeration value="Ch'en"/>
+      <xs:enumeration value="Xul"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

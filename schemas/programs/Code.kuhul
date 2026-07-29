@@ -1,0 +1,137 @@
+{
+  "kuhul": "2.0.0",
+  "folds": [
+    {
+      "name": "Pop",
+      "nodes": [
+        {
+          "value": "grammar",
+          "type": "literal"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Wo",
+      "nodes": [
+        {
+          "value": {
+            "value": "grammar",
+            "type": "literal"
+          },
+          "target": "domain",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "value": {
+              "kast-grammar-µ": 0.33,
+              "kuhul-program-grammar-µ": 0.33,
+              "code-analysis-µ": 0.33
+            },
+            "type": "literal"
+          },
+          "target": "mixture",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "value": {
+              "evidence": [],
+              "relations": [],
+              "notation": []
+            },
+            "type": "literal"
+          },
+          "target": "state",
+          "type": "assign"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Yax",
+      "nodes": [
+        {
+          "name": "state.notation",
+          "type": "ref"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Sek",
+      "nodes": [
+        {
+          "value": {
+            "name": "kast-grammar-µ",
+            "type": "ref"
+          },
+          "target": "note_kast-grammar",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "name": "kuhul-program-grammar-µ",
+            "type": "ref"
+          },
+          "target": "note_kuhul-program-grammar",
+          "type": "assign"
+        },
+        {
+          "value": {
+            "name": "code-analysis-µ",
+            "type": "ref"
+          },
+          "target": "note_code-analysis",
+          "type": "assign"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Ch'en",
+      "nodes": [
+        {
+          "value": {
+            "value": {
+              "contributions": "state.evidence",
+              "domain": "grammar"
+            },
+            "type": "literal"
+          },
+          "type": "emit"
+        }
+      ],
+      "type": "fold"
+    },
+    {
+      "name": "Xul",
+      "nodes": [
+        {
+          "name": "collapse",
+          "args": [
+            {
+              "value": "grammar",
+              "type": "literal"
+            }
+          ],
+          "type": "call"
+        }
+      ],
+      "type": "fold"
+    }
+  ],
+  "type": "program",
+  "meta": {
+    "name": "grammar Domain Program",
+    "version": "1.0.0",
+    "conformance_version": "2.0.0",
+    "description": "Auto-generated domain program for grammar micronauts",
+    "required_micronauts": [
+      "kast-grammar-µ",
+      "kuhul-program-grammar-µ",
+      "code-analysis-µ"
+    ]
+  }
+}

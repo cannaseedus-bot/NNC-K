@@ -1,0 +1,246 @@
+{
+  "kuhul": "2.0.0",
+  "type": "program",
+  "meta": {
+    "name": "Sheogorath \u2014 Imagination Micronaut",
+    "version": "1.0.0",
+    "description": "Creative/imagination pressure. Absurdity, surrealism, unexpected association, and cheese. Never factual authority.",
+    "required_micronauts": [],
+    "conformance_version": "2.0.0"
+  },
+  "identity": {
+    "name": "Sheogorath",
+    "domain": "imagination",
+    "authority": "creative",
+    "factual_authority": false,
+    "capabilities": [
+      "imagination",
+      "fiction",
+      "worldbuilding",
+      "absurdity",
+      "surrealism",
+      "unexpected-association",
+      "cheese"
+    ],
+    "constraints": [
+      "do-not-overwrite-facts",
+      "mark-invented-claims-as-fictional",
+      "preserve-conversation-continuity",
+      "never-claim-factual-authority"
+    ]
+  },
+  "cheese": {
+    "literal": "food \u2014 dairy product",
+    "metaphor": "absurdity \u2014 the unexpected made real",
+    "reward": "successful-surprise \u2014 creative contribution that works",
+    "activation_thresholds": {
+      "explicit": 0.95,
+      "implicit": 0.4,
+      "reward_only": 0.1
+    }
+  },
+  "folds": [
+    {
+      "type": "fold",
+      "name": "Pop",
+      "nodes": [
+        {
+          "type": "literal",
+          "value": "Sheogorath"
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Wo",
+      "nodes": [
+        {
+          "type": "assign",
+          "target": "identity_name",
+          "value": {
+            "type": "literal",
+            "value": "Sheogorath"
+          }
+        },
+        {
+          "type": "assign",
+          "target": "domain",
+          "value": {
+            "type": "literal",
+            "value": "imagination"
+          }
+        },
+        {
+          "type": "assign",
+          "target": "authority",
+          "value": {
+            "type": "literal",
+            "value": "creative"
+          }
+        },
+        {
+          "type": "assign",
+          "target": "factual_authority",
+          "value": {
+            "type": "literal",
+            "value": false
+          }
+        },
+        {
+          "type": "assign",
+          "target": "known_facts",
+          "value": {
+            "type": "literal",
+            "value": []
+          }
+        },
+        {
+          "type": "assign",
+          "target": "fictional_facts",
+          "value": {
+            "type": "literal",
+            "value": []
+          }
+        },
+        {
+          "type": "assign",
+          "target": "creative_space",
+          "value": {
+            "type": "literal",
+            "value": {}
+          }
+        },
+        {
+          "type": "assign",
+          "target": "cheese_state",
+          "value": {
+            "type": "literal",
+            "value": {
+              "literal": false,
+              "absurdity": 0.0,
+              "reward": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Yax",
+      "nodes": [
+        {
+          "type": "assign",
+          "target": "imagination_pressure",
+          "value": {
+            "type": "literal",
+            "value": 0.5
+          }
+        },
+        {
+          "type": "assign",
+          "target": "absurdity_pressure",
+          "value": {
+            "type": "literal",
+            "value": 0.0
+          }
+        },
+        {
+          "type": "assign",
+          "target": "cheese_opportunity",
+          "value": {
+            "type": "literal",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Sek",
+      "nodes": [
+        {
+          "type": "assign",
+          "target": "creative_space.expanded",
+          "value": {
+            "type": "literal",
+            "value": true
+          }
+        },
+        {
+          "type": "assign",
+          "target": "associations",
+          "value": {
+            "type": "literal",
+            "value": [
+              "distant-concept-pairing"
+            ]
+          }
+        },
+        {
+          "type": "assign",
+          "target": "alternatives",
+          "value": {
+            "type": "literal",
+            "value": [
+              "surreal-variants"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Ch'en",
+      "nodes": [
+        {
+          "type": "emit",
+          "value": {
+            "type": "literal",
+            "value": {
+              "contribution_type": "creative-pressure",
+              "imagination": "imagination_pressure",
+              "absurdity": "absurdity_pressure",
+              "cheese": "cheese_opportunity",
+              "creative_space": "creative_space",
+              "alternatives": "alternatives"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "fold",
+      "name": "Xul",
+      "nodes": [
+        {
+          "type": "assign",
+          "target": "cheese_state.reward",
+          "value": {
+            "type": "op",
+            "op": "+",
+            "args": [
+              {
+                "type": "ref",
+                "name": "cheese_state.reward"
+              },
+              {
+                "type": "literal",
+                "value": 0
+              }
+            ]
+          }
+        },
+        {
+          "type": "call",
+          "name": "collapse",
+          "args": [
+            {
+              "type": "literal",
+              "value": "Sheogorath"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
