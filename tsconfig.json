@@ -4,8 +4,15 @@
     "strict": true,
     "declaration": true
   },
+  "include": [
+    "compiler/src",
+    "src",
+    "runtime/src"
+  ],
   "exclude": [
     "node_modules",
+    "dotnet",
+    "WebX",
     "bin",
     "coverage",
     "dist",
