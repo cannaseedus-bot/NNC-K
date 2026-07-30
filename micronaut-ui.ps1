@@ -2916,6 +2916,7 @@ $sendBtn.Add_Click({
             Memories = $route.Memories
             EndorsedTransitions = $endorsedT
             ResultTransitions = $resultT
+            Contributions = @()   # @flux: canonical NodeContributions, enriched after micronauts run (empty until then)
             Success = $route.Success
             Fallback = $route.Fallback
             FallbackReason = $route.FallbackReason
@@ -2968,6 +2969,13 @@ $sendBtn.Add_Click({
                     Submit-MicronautContribution $m $msg $contribution $turnTick
                     $microContributions += $contribution
                 }
+            }
+            # @flux two-stage finalize: the trace was built at route-time (before micronauts ran) but is
+            # persisted later by Save-Chat, so enrich the live trace object with the canonical
+            # NodeContributions produced THIS turn -- no reconstruction, no separate store. CHEESE
+            # fields stay absent until the collapse->judge chain is actually wired.
+            if ($script:ExecutionTraces.ContainsKey($turnTick)) {
+                $script:ExecutionTraces[$turnTick].Contributions = @($microContributions)
             }
             $contribCtx = if ($microContributions.Count -gt 0) { ($microContributions | ForEach-Object { "[$($_.Subject)] $($_.Text)" }) -join ' | ' } else { "" }
             # Provenance ledger: what actually executed vs what was discovered
