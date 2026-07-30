@@ -221,6 +221,11 @@ export class Sandbox {
   constructor(opts = {}) {
     this._ctx     = { ...opts.globals };
     this._timeout = opts.timeoutMs ?? 5000;
+    // §46 authority gate: compiling a STRING into code via new Function() is NOT isolated
+    // (it executes in the global scope). Disabled by default so a data-only input can NEVER
+    // become executable code. Callers pass a function, or must explicitly opt in with
+    // { allowCodeStrings: true } -- a deliberate, non-authority capability grant.
+    this._allowCodeStrings = opts.allowCodeStrings === true;
   }
 
   setGlobal(name, val) { this._ctx[name] = val; }
@@ -231,7 +236,17 @@ export class Sandbox {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('sandbox timeout')), this._timeout);
       try {
-        const fn = typeof codeOrFn === 'function' ? codeOrFn : new Function(...Object.keys(this._ctx), `return (async()=>{ ${codeOrFn} })()`);
+        let fn;
+        if (typeof codeOrFn === 'function') {
+          fn = codeOrFn;                                  // trusted callback: always allowed
+        } else if (this._allowCodeStrings && typeof codeOrFn === 'string') {
+          fn = new Function(...Object.keys(this._ctx), `return (async()=>{ ${codeOrFn} })()`);
+        } else {
+          // §46: data-only string cannot become code unless explicitly authorized.
+          clearTimeout(timer);
+          resolve({ ok:false, error:'sandbox: string code execution is disabled (data-only inputs cannot become code); pass a function, or construct with { allowCodeStrings: true }' });
+          return;
+        }
         Promise.resolve(fn(...Object.values(this._ctx))).then(r => { clearTimeout(timer); resolve({ ok:true, result:r }); }, e => { clearTimeout(timer); resolve({ ok:false, error:e.message }); });
       } catch(e) { clearTimeout(timer); resolve({ ok:false, error:e.message }); }
     });
