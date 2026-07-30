@@ -10,13 +10,30 @@ namespace NeuralGrammar.Core
 {
     /// <summary>
     /// GAS Node — Google Apps Script Network Client
-    /// Connects the local C# runtime to the global micronaut network via a GAS web app.
-    /// The GAS endpoint acts as a rendezvous/registry — it lets instances discover
-    /// each other, advertise capabilities, lease micronauts, and sync artifacts.
-    ///
-    /// GAS deployment: https://script.google.com/macros/s/AKfycbx5VIUH_7p_z90VMyXyZqLpiT1qIZNSPwWqwkC_pU6SykjDkvNqhZdZd5HZMYp7oeLH/exec
+    /// 
+    /// AUTHORITY BOUNDARY:
+    /// GAS is rendezvous/registry only; XCFE owns admission and K'UHUL owns fold law.
+    /// 
+    /// RESPONSIBILITIES:
+    /// - Registration & discovery
+    /// - Node heartbeats & capability advertisement
+    /// - Leasing & artifact synchronization
+    /// - Receipt submission
+    /// 
+    /// NEVER PERFORMS:
+    /// - XCFE admission
+    /// - K'UHUL fold execution
+    /// - Model inference
+    /// - CHEESE evaluation
+    /// - BossPromotion
+    /// - Runtime mutation
+    /// 
+    /// This class is a network transport/client only. It acts as a client for the GAS
+    /// rendezvous service rather than embedding execution logic. Backend agnostic.
+    /// 
+    /// GAS deployment: https://script.google.com/macros/s/AKfycby2-9Fhu8Oy_Em0KZ7kjqqp_0CtVkpjuEj1VFLzSzBYvhne1GchVZUf0Cd-oJvreoJh/exec
     /// Apps Script source: src/MicronautNetworkNode.gs
-    ///
+    /// 
     /// Protocol wire format: POST JSON body, GET query params.
     /// All endpoints return { ok: true/false, ... }.
     /// </summary>
@@ -45,6 +62,21 @@ namespace NeuralGrammar.Core
             public string Endpoint { get; set; }
             public string ProofHead { get; set; }
             public string LastSeenUtc { get; set; }
+            
+            // Enhanced runtime metadata (optional, backward compatible)
+            // (nested type renamed RuntimeMetadata -> RuntimeMeta to resolve CS0102 collision with
+            //  the property of the same name; the property name / JSON contract is unchanged.)
+            public RuntimeMeta RuntimeMetadata { get; set; }
+
+            public class RuntimeMeta
+            {
+                public string Runtime { get; set; } = "NNC-K";
+                public string RuntimeVersion { get; set; }
+                public string Authority { get; set; } = "runtime";
+                public List<string> SupportedFolds { get; set; } = new();
+                public List<string> SupportedModels { get; set; } = new();
+                public List<string> SupportedSidecars { get; set; } = new();
+            }
         }
 
         public class GasResponse
@@ -62,7 +94,7 @@ namespace NeuralGrammar.Core
 
         public GasNode(string endpoint = null, string nodeId = null, string publicKey = null)
         {
-            _endpoint = (endpoint ?? "https://script.google.com/macros/s/AKfycbx5VIUH_7p_z90VMyXyZqLpiT1qIZNSPwWqwkC_pU6SykjDkvNqhZdZd5HZMYp7oeLH/exec")
+            _endpoint = (endpoint ?? "https://script.google.com/macros/s/AKfycby2-9Fhu8Oy_Em0KZ7kjqqp_0CtVkpjuEj1VFLzSzBYvhne1GchVZUf0Cd-oJvreoJh/exec")
                 .TrimEnd('/');
             _nodeId = nodeId ?? $"nnck-{Guid.NewGuid():N}".Substring(0, 24);
             _publicKey = publicKey ?? $"pk-{Guid.NewGuid():N}";
@@ -81,8 +113,13 @@ namespace NeuralGrammar.Core
                 ["node_id"] = _nodeId,
                 ["public_key"] = _publicKey,
                 ["endpoint"] = "https://nnc-k.local",
-                ["runtime_version"] = "nnck-csharp-1.0",
+                ["runtime"] = "NNC-K",
+                ["runtime_version"] = "nnck-csharp-2.0",
                 ["protocol_version"] = "micronaut-network/1.0",
+                ["authority"] = "runtime",
+                ["supported_folds"] = new List<string> { "Pop", "Wo", "Yax", "Sek", "Ch'en", "Xul" },
+                ["supported_models"] = new List<string> { "GPT-OSS", "Gemma", "Qwen", "LFM" },
+                ["supported_sidecars"] = new List<string> { "asx_ram_v2", "asx_gemm" },
                 ["capacity"] = _capacity,
                 ["active_jobs"] = _activeJobs,
                 ["micronauts"] = micronauts ?? new List<MicronautAd>(),
@@ -102,6 +139,15 @@ namespace NeuralGrammar.Core
                 ["node_id"] = _nodeId,
                 ["active_jobs"] = _activeJobs,
                 ["capacity"] = _capacity,
+                ["runtime_metadata"] = new Dictionary<string, object>
+                {
+                    ["runtime"] = "NNC-K",
+                    ["runtime_version"] = "nnck-csharp-2.0",
+                    ["authority"] = "runtime",
+                    ["supported_folds"] = new List<string> { "Pop", "Wo", "Yax", "Sek", "Ch'en", "Xul" },
+                    ["supported_models"] = new List<string> { "GPT-OSS", "Gemma", "Qwen", "LFM" },
+                    ["supported_sidecars"] = new List<string> { "asx_ram_v2", "asx_gemm" },
+                }
             };
             if (micronauts != null) body["micronauts"] = micronauts;
             return await PostAsync("heartbeat", body);
@@ -170,6 +216,24 @@ namespace NeuralGrammar.Core
                         foreach (var c in caps.EnumerateArray()) rn.Capabilities.Add(c.GetString());
                     if (m.TryGetProperty("scores", out var sc))
                         foreach (var kv in sc.EnumerateObject()) rn.Scores[kv.Name] = kv.Value.GetDouble();
+                    
+                    // Parse enhanced runtime metadata (optional, backward compatible)
+                    if (m.TryGetProperty("runtime_metadata", out var rm))
+                    {
+                        rn.RuntimeMetadata = new RemoteMicronaut.RuntimeMeta
+                        {
+                            Runtime = rm.TryGetProperty("runtime", out var r) ? r.GetString() : "NNC-K",
+                            RuntimeVersion = rm.TryGetProperty("runtime_version", out var rv) ? rv.GetString() : "",
+                            Authority = rm.TryGetProperty("authority", out var a) ? a.GetString() : "runtime",
+                        };
+                        if (rm.TryGetProperty("supported_folds", out var folds))
+                            foreach (var f in folds.EnumerateArray()) rn.RuntimeMetadata.SupportedFolds.Add(f.GetString());
+                        if (rm.TryGetProperty("supported_models", out var models))
+                            foreach (var m_item in models.EnumerateArray()) rn.RuntimeMetadata.SupportedModels.Add(m_item.GetString());
+                        if (rm.TryGetProperty("supported_sidecars", out var sidecars))
+                            foreach (var s in sidecars.EnumerateArray()) rn.RuntimeMetadata.SupportedSidecars.Add(s.GetString());
+                    }
+                    
                     list.Add(rn);
                 }
                 OnMicronautsDiscovered?.Invoke(list);
@@ -226,20 +290,26 @@ namespace NeuralGrammar.Core
             return await PostAsync("release", new { lease_id = leaseId });
         }
 
-        // ---- Submit a receipt (creates a hash chain for audit) ----
-        public async Task<GasResponse> SubmitReceiptAsync(string leaseId, string status, string resultHash = null)
+        // ---- Submit a receipt (creates a hash chain for audit)
+        // Enhanced with optional collapse proof and @flux reference ----
+        public async Task<GasResponse> SubmitReceiptAsync(string leaseId, string status, string resultHash = null,
+            string collapseProof = null, string fluxReference = null)
         {
             return await PostAsync("receipt", new
             {
                 lease_id = leaseId,
                 status = status,
                 result_hash = resultHash ?? "",
+                collapse_proof = collapseProof ?? "",
+                flux_reference = fluxReference ?? "",
             });
         }
 
         // ---- Cache a micronaut artifact to Google Drive ----
+        // Enhanced with optional provenance fields (execution version, collapse proof, @flux reference) ----
         public async Task<GasResponse> CacheArtifactAsync(string micronautId, object manifest,
-            List<string> capabilities = null, Dictionary<string, double> scores = null, int version = 1)
+            List<string> capabilities = null, Dictionary<string, double> scores = null, int version = 1,
+            string executionVersion = null, string collapseProof = null, string fluxReference = null)
         {
             return await PostAsync("micronauts/cache", new
             {
@@ -248,6 +318,10 @@ namespace NeuralGrammar.Core
                 capabilities = capabilities ?? new List<string>(),
                 scores = scores ?? new Dictionary<string, double>(),
                 version = version,
+                execution_version = executionVersion ?? "",
+                collapse_proof = collapseProof ?? "",
+                flux_reference = fluxReference ?? "",
+                authority = "runtime",
             });
         }
 

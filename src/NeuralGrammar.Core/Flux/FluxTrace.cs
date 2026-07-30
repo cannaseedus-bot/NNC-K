@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace NeuralGrammar.Core.Flux
 {
@@ -9,27 +10,31 @@ namespace NeuralGrammar.Core.Flux
     /// One @flux execution trace: the observable record of a single tick through
     /// the K'UHUL fold wheel. Kept intentionally tolerant so PowerShell can store
     /// arbitrary micro-contribution shapes without losing them.
+    ///
+    /// Every property carries an explicit [JsonPropertyName] (PascalCase) so serialize/
+    /// deserialize round-trips exactly what the PowerShell UI writes, INDEPENDENT of the
+    /// serializer's naming policy. (JsonOptions.Pretty uses SnakeCaseLower, which otherwise
+    /// silently dropped multi-word fields like FoldTrace/EndorsedTransitions on Deserialize.)
     /// </summary>
     public sealed class FluxTrace
     {
-        public int Tick { get; set; }
-        public string Text { get; set; } = "";
-        public List<string> FoldTrace { get; set; } = new();
-        public string Intent { get; set; } = "";
-        public string Brain { get; set; } = "";
-        public double Confidence { get; set; }
-        public int MemoryCount { get; set; }
-        public List<JsonElement> Memories { get; set; } = new();
-        public List<NodeContribution> Contributions { get; set; } = new();
-        public List<JsonElement> MicroContributions { get; set; } = new();
+        [JsonPropertyName("Tick")]                 public int Tick { get; set; }
+        [JsonPropertyName("Text")]                 public string Text { get; set; } = "";
+        [JsonPropertyName("FoldTrace")]            public List<string> FoldTrace { get; set; } = new();
+        [JsonPropertyName("Intent")]               public string Intent { get; set; } = "";
+        [JsonPropertyName("Brain")]                public string Brain { get; set; } = "";
+        [JsonPropertyName("Confidence")]           public double Confidence { get; set; }
+        [JsonPropertyName("MemoryCount")]          public int MemoryCount { get; set; }
+        [JsonPropertyName("Memories")]             public List<JsonElement> Memories { get; set; } = new();
+        [JsonPropertyName("Contributions")]        public List<NodeContribution> Contributions { get; set; } = new();
+        [JsonPropertyName("MicroContributions")]   public List<JsonElement> MicroContributions { get; set; } = new();
         // Causal provenance for @flux semantic learning (Experiment C / FluxFieldLearner):
         // what the field ENDORSED (predicted) vs what actually RESULTED, as [from,to] transition pairs.
-        // Kept tolerant + defaulted-empty so existing traces/consumers are unaffected.
-        public List<string[]> EndorsedTransitions { get; set; } = new();
-        public List<string[]> ResultTransitions { get; set; } = new();
-        public bool Success { get; set; }
-        public bool Fallback { get; set; }
-        public string FallbackReason { get; set; } = "";
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        [JsonPropertyName("EndorsedTransitions")]  public List<string[]> EndorsedTransitions { get; set; } = new();
+        [JsonPropertyName("ResultTransitions")]    public List<string[]> ResultTransitions { get; set; } = new();
+        [JsonPropertyName("Success")]              public bool Success { get; set; }
+        [JsonPropertyName("Fallback")]             public bool Fallback { get; set; }
+        [JsonPropertyName("FallbackReason")]       public string FallbackReason { get; set; } = "";
+        [JsonPropertyName("Timestamp")]            public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     }
 }
