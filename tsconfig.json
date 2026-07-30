@@ -1,1 +1,18 @@
-{\n  "compilerOptions": {\n    "target": "ES2020",\n    "strict": true,\n    "declaration": true\n  }\n}
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "strict": true,
+    "declaration": true
+  },
+  "exclude": [
+    "node_modules",
+    "bin",
+    "coverage",
+    "dist",
+    "build",
+    ".learning",
+    ".holotape",
+    ".backups",
+    ".deepseek"
+  ]
+}
