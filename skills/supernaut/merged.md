@@ -1757,7 +1757,7 @@ Creation engine for agent and skill infrastructure. Probes the current project, 
 Run `scripts/probe_project.py` from the project root. It auto-detects stack, reads README + existing CLAUDE.md + git log, and emits `project.probe.json`.
 
 ```bash
-python C:/Users/canna/.codex/skills/project-factory/scripts/probe_project.py
+python ~/.codex/skills/project-factory/scripts/probe_project.py
 ```
 
 Then read `project.probe.json` and use it as the authoritative input for all generation.
