@@ -2977,6 +2977,45 @@ $sendBtn.Add_Click({
             if ($script:ExecutionTraces.ContainsKey($turnTick)) {
                 $script:ExecutionTraces[$turnTick].Contributions = @($microContributions)
             }
+            # Production C: post-Xul, CHEESE judges the SELECTED semantic edges (contribution Relations),
+            # persists CollapseProof + CheeseRecord (append-only provenance), and surfaces the verdict.
+            # Guarded so it can never break a turn. CHEESE judges; it does not collapse or promote.
+            try {
+                if (-not $script:CheesePipeline) {
+                    $script:CheesePipeline = [NeuralGrammar.Core.Runtime.CheesePipeline]::new((Join-Path $script:DataDir 'provenance'))
+                }
+                $cheeseEdges = @()
+                foreach ($c in $microContributions) {
+                    $rels = @($c.Relations)
+                    if ($rels.Count -gt 0) {
+                        foreach ($r in $rels) {
+                            $s = $null; $rel = $null; $t = $null
+                            if ($r -is [System.Array]) {
+                                if ($r.Count -ge 3) { $s = $r[0]; $rel = $r[1]; $t = $r[2] }
+                                elseif ($r.Count -eq 2) { $s = $r[0]; $rel = $c.Capability; $t = $r[1] }
+                            } elseif ($r.Source) { $s = $r.Source; $rel = $r.Relation; $t = $r.Target }
+                            if ($s -and $t) { $cheeseEdges += [NeuralGrammar.Core.Runtime.CheesePipeline]::Edge([string]$s, [string]$rel, [string]$t, [double]$c.Confidence) }
+                        }
+                    } else {
+                        # fallback (empty Relations): subject --[capability]--> matched concept
+                        $t = if ($c.Match) { $c.Match } elseif ($c.Intent) { $c.Intent } else { $null }
+                        if ($c.Subject -and $t) { $cheeseEdges += [NeuralGrammar.Core.Runtime.CheesePipeline]::Edge([string]$c.Subject, [string]$c.Capability, [string]$t, [double]$c.Confidence) }
+                    }
+                }
+                if ($cheeseEdges.Count -gt 0) {
+                    $selectedSubjects = @($microContributions | ForEach-Object { $_.Subject })
+                    $rejected = @($relevantMicros | Where-Object { $_.d.subject -notin $selectedSubjects } | ForEach-Object { [string]$_.d.subject })
+                    $rec = $script:CheesePipeline.JudgeTurn($script:FluxStore.SessionId, [long]$turnTick, [string]$route.Intent, [string]$route.Brain, [double]$route.Confidence, $cheeseEdges, $rejected, @(), ($route.FoldTrace -join '-'))
+                    if ($rec) {
+                        $sm = [NeuralGrammar.Core.Runtime.CheesePipeline]::Summarize($rec)
+                        if ($script:ExecutionTraces.ContainsKey($turnTick)) {
+                            $script:ExecutionTraces[$turnTick].Cheese = @{ RecordHash = $sm.RecordHash; Edges = $sm.Edges; Accepted = $sm.Accepted; Guarded = $sm.Guarded; Rejected = $sm.Rejected }
+                        }
+                        $script:TurnMeta.Sources.Cheese = $true
+                        Write-Console ("CHEESE: $($sm.Edges) edges -> accepted=$($sm.Accepted) guarded=$($sm.Guarded) rejected=$($sm.Rejected)") "Phase"
+                    }
+                }
+            } catch { Write-Console "cheese: $($_.Exception.Message)" "Error" }
             $contribCtx = if ($microContributions.Count -gt 0) { ($microContributions | ForEach-Object { "[$($_.Subject)] $($_.Text)" }) -join ' | ' } else { "" }
             # Provenance ledger: what actually executed vs what was discovered
             Write-Console "provenance: $($microContributions.Count) contributions, $($relevantMicros.Count) considered, intent=$($route.Intent)" "Tick"

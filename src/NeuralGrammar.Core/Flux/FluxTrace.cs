@@ -32,6 +32,9 @@ namespace NeuralGrammar.Core.Flux
         // what the field ENDORSED (predicted) vs what actually RESULTED, as [from,to] transition pairs.
         [JsonPropertyName("EndorsedTransitions")]  public List<string[]> EndorsedTransitions { get; set; } = new();
         [JsonPropertyName("ResultTransitions")]    public List<string[]> ResultTransitions { get; set; } = new();
+        // Post-Xul CHEESE verdict summary { RecordHash, Edges, Accepted, Guarded, Rejected }; null until
+        // the CHEESE chain judges this collapse (never inferred from Success/Confidence).
+        [JsonPropertyName("Cheese")]               public JsonElement? Cheese { get; set; }
         [JsonPropertyName("Success")]              public bool Success { get; set; }
         [JsonPropertyName("Fallback")]             public bool Fallback { get; set; }
         [JsonPropertyName("FallbackReason")]       public string FallbackReason { get; set; } = "";
