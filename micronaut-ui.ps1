@@ -1,11 +1,88 @@
+[CmdletBinding()]
+param(
+    [ValidateRange(1024, 65535)]
+    [int] $Port = 4525,
+    [switch] $NoBrowser,
+    [switch] $LegacyDesktop,
+    [switch] $StudioOnly,
+    [switch] $ChatSmokeTest,
+    [switch] $DesktopSplash
+)
+
+if ($StudioOnly) {
+    $studioLauncher = Join-Path $PSScriptRoot 'Studio.ps1'
+    & $studioLauncher -Port $Port -NoBrowser:$NoBrowser
+    exit
+}
+
+if (-not $LegacyDesktop) {
+    $studioLauncher = Join-Path $PSScriptRoot 'Studio.ps1'
+    $powerShellPath = (Get-Process -Id $PID).Path
+    $studioArguments = @(
+        '-NoProfile'
+        '-File'
+        $studioLauncher
+        '-Port'
+        [string] $Port
+    )
+    if ($NoBrowser) {
+        $studioArguments += '-NoBrowser'
+    }
+    Start-Process `
+        -FilePath $powerShellPath `
+        -ArgumentList $studioArguments `
+        -WorkingDirectory $PSScriptRoot `
+        -WindowStyle Hidden | Out-Null
+}
+
+$createdNewChatInstance = $false
+$script:ChatInstanceMutex = [System.Threading.Mutex]::new(
+    $true,
+    'Local\NNC-K-MicronautChat-v1',
+    [ref] $createdNewChatInstance
+)
+if (-not $createdNewChatInstance) {
+    Write-Warning 'Micronaut Chat is already running. Reusing the existing chat window.'
+    exit
+}
+
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms, System.Drawing
+[System.Windows.Media.RenderOptions]::ProcessRenderMode =
+    [System.Windows.Interop.RenderMode]::SoftwareOnly
 
 $csDir = Join-Path $PSScriptRoot "src\NeuralGrammar.Core"
 if (-not (Test-Path $csDir)) { $csDir = Join-Path (Get-Location) "src\NeuralGrammar.Core" }
-if (Test-Path $csDir) {
-    $files = Get-ChildItem $csDir -Filter "*.cs" -Recurse | Where-Object { $_.FullName -notmatch "\\obj\\|\\bin\\" } | ForEach-Object { $_.FullName }
-    if ($files) { Add-Type -Path $files -ErrorAction SilentlyContinue | Out-Null }
+$coreAssemblyCandidates = @(
+    (Join-Path $PSScriptRoot "artifacts\NeuralGrammar.Core-next\NeuralGrammar.Core.dll"),
+    (Join-Path $csDir "bin\Release\net8.0\NeuralGrammar.Core.dll"),
+    (Join-Path $csDir "bin\Debug\net8.0\NeuralGrammar.Core.dll")
+)
+$coreAssemblyPath = $coreAssemblyCandidates |
+    Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
+    Select-Object -First 1
 
+if ($coreAssemblyPath) {
+    try {
+        Add-Type -Path $coreAssemblyPath -ErrorAction Stop
+        Write-Host "NeuralGrammar.Core: loaded $coreAssemblyPath"
+    } catch {
+        throw "NeuralGrammar.Core assembly load failed at '$coreAssemblyPath': $($_.Exception.Message)"
+    }
+} elseif (Test-Path $csDir) {
+    Write-Warning "NeuralGrammar.Core.dll was not found; falling back to loose-source compilation."
+    $files = Get-ChildItem $csDir -Filter "*.cs" -Recurse |
+        Where-Object { $_.FullName -notmatch "\\obj\\|\\bin\\" } |
+        ForEach-Object { $_.FullName }
+    if (-not $files) {
+        throw "NeuralGrammar.Core has no loadable assembly or C# source files at '$csDir'."
+    }
+    try {
+        Add-Type -Path $files -ErrorAction Stop | Out-Null
+    } catch {
+        throw "NeuralGrammar.Core loose-source compilation failed: $($_.Exception.Message)"
+    }
+} else {
+    throw "NeuralGrammar.Core was not found at '$csDir'."
 }
 # Runtime-extension module: @flux, worker dispatch, validation helpers.
 $runtimeModule = Join-Path $PSScriptRoot "scripts\NNCK-Runtime.psm1"
@@ -140,7 +217,7 @@ function Set-ControlTheme {
 function Close-Splash($ctx) {
     if (-not $ctx -or -not $ctx.Window) { return }
     $elapsed = if ($ctx.StartTime) { [DateTime]::UtcNow - $ctx.StartTime.ToUniversalTime() } else { [TimeSpan]::Zero }
-    $remaining = [TimeSpan]::FromSeconds(30) - $elapsed
+    $remaining = [TimeSpan]::FromSeconds(1.5) - $elapsed
     if ($remaining.TotalSeconds -gt 0) {
         $frame = New-Object Windows.Threading.DispatcherFrame
         $timer = New-Object Windows.Threading.DispatcherTimer
@@ -196,16 +273,93 @@ $script:ActiveModel = "lfm-2.5-1.2b"
 # ============================================================================
 # Tool Registry — native executables available to all micronauts and models
 # ============================================================================
+function Resolve-NativeTool {
+    param(
+        [Parameter(Mandatory)] [string] $Name,
+        [Parameter(Mandatory)] [string[]] $Candidates,
+        [Parameter(Mandatory)] [string] $Description,
+        [Parameter(Mandatory)] [string[]] $Tags
+    )
+
+    $resolvedPath = $Candidates |
+        ForEach-Object { Join-Path $script:Root $_ } |
+        Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
+        Select-Object -First 1
+
+    return @{
+        Name       = $Name
+        Path       = $resolvedPath
+        Candidates = $Candidates
+        Desc       = $Description
+        Tags       = $Tags
+        Available  = [bool]$resolvedPath
+        Status     = if ($resolvedPath) { 'ready' } else { 'unavailable' }
+    }
+}
+
 $script:ToolRegistry = @{
-    'micronaut_coder'   = @{ Path = Join-Path $script:Root 'bin\micronaut_coder.exe';   Desc = 'Code generation/compilation';      Tags = @('code','compile','generate','csharp') }
-    'cpp_runtime'       = @{ Path = Join-Path $script:Root 'bin\micronaut_cpp_runtime.exe'; Desc = 'Native C++ runtime for micronaut execution'; Tags = @('native','runtime','cpp','execute') }
-    'multi_format'      = @{ Path = Join-Path $script:Root 'bin\multi_format_executor.exe'; Desc = 'Multi-format executor (.kuhul/.kprog/JSON/XML)'; Tags = @('format','execute','parse','convert') }
-    'native_glyph'      = @{ Path = Join-Path $script:Root 'bin\native_glyph_engine.exe'; Desc = 'Native glyph rendering/execution'; Tags = @('glyph','render','native','opcode') }
-    'jsonl_executor'    = @{ Path = Join-Path $script:Root 'bin\jsonl_executor.exe';    Desc = 'JSONL batch processor for training/inference'; Tags = @('jsonl','batch','training','inference') }
-    'micronaut_factory' = @{ Path = Join-Path $script:Root 'bin\micronaut_factory.exe'; Desc = 'Micronaut factory: genesis, bigram merge, mutation tracking'; Tags = @('genesis','create','merge','evolve','factory') }
-    'web_search'        = @{ Path = 'builtin'; Desc = 'Web search capability (built-in)'; Tags = @('search','web','research','fetch') }
-    'model_inference'   = @{ Path = 'builtin'; Desc = 'Model inference via API';         Tags = @('model','inference','chat','llm') }
-    'adam_router'       = @{ Path = 'http://localhost:3167'; Desc = 'ADAM: bigram/trigram prompt router to reasoning/code/math experts'; Tags = @('routing','adaptive','bigram','expert','deterministic') }
+    'micronaut_code_reviewer' = Resolve-NativeTool `
+        -Name 'micronaut_code_reviewer' `
+        -Candidates @(
+            'bin\micronaut-coder\Release\micronaut_code_reviewer.exe',
+            'bin\micronaut-coder\build\bin\Release\micronaut_code_reviewer.exe',
+            'bin\micronaut-coder\build\bin\Release\micronaut_coder.exe',
+            'bin\micronaut\coder\Release\micronaut_coder.exe',
+            'bin\micronaut\coder\build\bin\micronaut_coder.exe'
+        ) `
+        -Description 'Deterministic code review, TODO extraction, explanation, and refactoring suggestions' `
+        -Tags @('code','review','todos','explain','refactor','static-analysis')
+    'cpp_runtime' = Resolve-NativeTool `
+        -Name 'cpp_runtime' `
+        -Candidates @(
+            'native\semantic_kernel_cpp\build\Release\semantic_kernel_cli.exe',
+            'native\semantic_kernel_cpp\build-revalidate\Release\semantic_kernel_cli.exe'
+        ) `
+        -Description 'Partial native semantic compiler/runtime; DX12 command emits schedules only' `
+        -Tags @('native','runtime','cpp','execute')
+    'multi_format' = Resolve-NativeTool `
+        -Name 'multi_format' `
+        -Candidates @(
+            'scripts\multi_format_manager.py',
+            'bin\multi_format_executor.exe'
+        ) `
+        -Description 'Bounded multi-format inspection, validation, and normalization' `
+        -Tags @('format','inspect','validate','normalize','parse')
+    'multi_format_generator' = Resolve-NativeTool `
+        -Name 'multi_format_generator' `
+        -Candidates @('native\asx\build-nnck\bin\multi_format_generator.exe') `
+        -Description 'Deterministic model-facing grammar/schema generator' `
+        -Tags @('format','grammar','schema','generate','model','constrained')
+    'native_glyph' = Resolve-NativeTool `
+        -Name 'native_glyph' `
+        -Candidates @(
+            'bin\native_glyph_engine.exe',
+            'bin\Kuhul-c++\native_glyph_engine.exe',
+            'bin\Kuhul-c++\build-nnck-ninja\native_glyph_engine.exe',
+            'bin\Kuhul-c++\build-cmake-targets-vs2022\Release\native_glyph_engine.exe'
+        ) `
+        -Description 'Native glyph rendering/execution' `
+        -Tags @('glyph','render','native','opcode')
+    'jsonl_executor' = Resolve-NativeTool `
+        -Name 'jsonl_executor' `
+        -Candidates @(
+            'scripts\jsonl_executor.py',
+            'bin\jsonl_executor.exe'
+        ) `
+        -Description 'Bounded JSONL validation, statistics, and normalization' `
+        -Tags @('jsonl','batch','training','trace','validate')
+    'micronaut_factory' = Resolve-NativeTool `
+        -Name 'micronaut_factory' `
+        -Candidates @('bin\micronaut\factory\Release\micronaut_factory.exe') `
+        -Description 'Micronaut factory: genesis, bigram merge, mutation tracking' `
+        -Tags @('genesis','create','merge','evolve','factory')
+    'web_search'      = @{ Name = 'web_search'; Path = 'builtin'; Desc = 'Web search capability (built-in)'; Tags = @('search','web','research','fetch'); Available = $true; Status = 'ready' }
+    'model_inference' = @{ Name = 'model_inference'; Path = 'builtin'; Desc = 'Model inference via API'; Tags = @('model','inference','chat','llm'); Available = $true; Status = 'ready' }
+    'adam_router'     = @{ Name = 'adam_router'; Path = 'http://localhost:3167'; Desc = 'ADAM: bigram/trigram prompt router to reasoning/code/math experts'; Tags = @('routing','adaptive','bigram','expert','deterministic'); Available = $true; Status = 'configured' }
+}
+
+if ($script:ToolRegistry['cpp_runtime'].Available) {
+    $script:ToolRegistry['cpp_runtime'].Status = 'partial'
 }
 
 function Invoke-Tool($toolName, $args, $timeoutMs = 30000) {
@@ -215,14 +369,30 @@ function Invoke-Tool($toolName, $args, $timeoutMs = 30000) {
     }
     $tool = $script:ToolRegistry[$toolName]
     if ($tool.Path -eq 'builtin') { return $null }
-    if (-not (Test-Path $tool.Path)) {
-        Write-Console "tool: $toolName missing at $($tool.Path)" "Error"
-        return $null
+    if (-not $tool.Available -or [string]::IsNullOrWhiteSpace([string]$tool.Path)) {
+        $checked = if ($tool.Candidates) { $tool.Candidates -join ', ' } else { '<none>' }
+        Write-Console "tool: $toolName unavailable; checked $checked" "Error"
+        return @{ error = 'tool_unavailable'; tool = $toolName; candidates = $tool.Candidates }
+    }
+    if (-not (Test-Path -LiteralPath $tool.Path -PathType Leaf)) {
+        $tool.Available = $false
+        $tool.Status = 'missing'
+        Write-Console "tool: $toolName disappeared from $($tool.Path)" "Error"
+        return @{ error = 'tool_missing'; tool = $toolName; path = $tool.Path }
     }
     try {
         $psi = New-Object System.Diagnostics.ProcessStartInfo
-        $psi.FileName = $tool.Path
-        $psi.Arguments = $args
+        if ([System.IO.Path]::GetExtension($tool.Path) -ieq '.py') {
+            $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
+            if (-not $pythonCommand) {
+                return @{ error = 'python_unavailable'; tool = $toolName }
+            }
+            $psi.FileName = $pythonCommand.Source
+            $psi.Arguments = "`"$($tool.Path)`" $args"
+        } else {
+            $psi.FileName = $tool.Path
+            $psi.Arguments = $args
+        }
         $psi.UseShellExecute = $false
         $psi.RedirectStandardOutput = $true
         $psi.RedirectStandardError = $true
@@ -241,12 +411,37 @@ function Invoke-Tool($toolName, $args, $timeoutMs = 30000) {
 function Get-ToolsByTag($tag) {
     $matches = @()
     foreach ($key in $script:ToolRegistry.Keys) {
-        if ($script:ToolRegistry[$key].Tags -contains $tag) { $matches += $key }
+        $tool = $script:ToolRegistry[$key]
+        if ($tool.Available -and $tool.Tags -contains $tag) { $matches += $key }
     }
     return $matches
 }
 
-# tools registered (see ToolRegistry)
+function Get-ToolCapabilityReport {
+    return @(
+        foreach ($key in ($script:ToolRegistry.Keys | Sort-Object)) {
+            $tool = $script:ToolRegistry[$key]
+            [PSCustomObject]@{
+                Name      = $key
+                Status    = $tool.Status
+                Available = [bool]$tool.Available
+                Path      = $tool.Path
+                Kind      = if ($tool.Path -eq 'builtin') { 'builtin' }
+                            elseif ([string]$tool.Path -match '^https?://') { 'service' }
+                            elseif ([System.IO.Path]::GetExtension([string]$tool.Path) -ieq '.py') { 'python' }
+                            else { 'native' }
+            }
+        }
+    )
+}
+
+$toolCapabilityReport = Get-ToolCapabilityReport
+$readyToolCount = @($toolCapabilityReport | Where-Object Available).Count
+$unavailableToolCount = $toolCapabilityReport.Count - $readyToolCount
+Write-Host "Micronaut tools: $readyToolCount ready/configured, $unavailableToolCount unavailable"
+foreach ($missingTool in ($toolCapabilityReport | Where-Object { -not $_.Available })) {
+    Write-Warning "Micronaut tool unavailable: $($missingTool.Name)"
+}
 
 $script:Conversation = @()
 $script:Attachments = @()
@@ -291,7 +486,7 @@ function Add-Error($msg) {
 function Show-SplashScreen {
     $splash = New-Object Windows.Window
     $splash.Title = "Neural Grammar Runtime"
-    $splash.Width = 620; $splash.Height = 500
+    $splash.Width = 520; $splash.Height = 260
     $splash.WindowStartupLocation = "CenterScreen"
     $splash.Background = '#0d1117'; $splash.Foreground = '#e2e8f0'
     $splash.FontFamily = "Consolas"; $splash.FontSize = 17
@@ -299,21 +494,31 @@ function Show-SplashScreen {
     $splash.Topmost = $true
     $splash.WindowStartupLocation = "CenterScreen"
 
-    $g = [Windows.Controls.Grid]::new(); $g.Margin = '0'
-    $g.RowDefinitions.Add((New-Object Windows.Controls.RowDefinition))
-    $g.RowDefinitions[0].Height = [Windows.GridLength]::new(500)
-
-    # Full SVG-3D boot logo with built-in console
-    $logoBrowser = New-Object System.Windows.Controls.WebBrowser
-    $logoHtmlPath = Join-Path $PSScriptRoot "schemas/themes/kuhul-logo.html"
-    if (Test-Path $logoHtmlPath) {
-        $logoHtml = Get-Content $logoHtmlPath -Raw
-        $logoBrowser.NavigateToString($logoHtml)
-    }
-    $logoBrowser.MaxHeight = 500
-    [Windows.Controls.Grid]::SetRow($logoBrowser, 0); $g.Children.Add($logoBrowser)
-
-    $splash.Content = $g
+    $panel = [Windows.Controls.StackPanel]::new()
+    $panel.VerticalAlignment = 'Center'
+    $panel.HorizontalAlignment = 'Center'
+    $mark = New-Object Windows.Controls.TextBlock
+    $mark.Text = "K'UHUL"
+    $mark.FontSize = 46
+    $mark.FontWeight = 'Bold'
+    $mark.Foreground = '#58a6ff'
+    $mark.HorizontalAlignment = 'Center'
+    $subtitle = New-Object Windows.Controls.TextBlock
+    $subtitle.Text = 'Semantic Kernel Runtime'
+    $subtitle.FontSize = 14
+    $subtitle.Foreground = '#8b949e'
+    $subtitle.HorizontalAlignment = 'Center'
+    $subtitle.Margin = '0,8,0,0'
+    $status = New-Object Windows.Controls.TextBlock
+    $status.Text = 'Initializing Micronaut Chat...'
+    $status.FontSize = 11
+    $status.Foreground = '#3fb950'
+    $status.HorizontalAlignment = 'Center'
+    $status.Margin = '0,24,0,0'
+    $panel.Children.Add($mark)
+    $panel.Children.Add($subtitle)
+    $panel.Children.Add($status)
+    $splash.Content = $panel
     $splash.Show()
     $splash.UpdateLayout()
     # Pump 200ms of dispatcher frames so the splash renders before init continues
@@ -406,8 +611,8 @@ foreach ($s in $script:PyScripts) {
       <DockPanel>
         <TextBlock DockPanel.Dock="Left" Text=" Micronaut Chat" FontSize="14" Foreground="#58a6ff" VerticalAlignment="Center"/>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-          <Button x:Name="BtnUser" Content="[?]" Width="32" Height="22" Background="Transparent" Foreground="#8b949e" BorderThickness="0" Cursor="Hand" FontSize="10" ToolTip="Sign in"/>
-          <Button x:Name="BtnWizard" Content="[W]" Width="28" Height="22" FontSize="10" Background="Transparent" Foreground="#8b949e" BorderThickness="0" Cursor="Hand" Margin="2,0,0,0" ToolTip="K'UHUL Shaman (create .kuhul programs)"/>
+          <Button x:Name="BtnUser" Content="♙" Width="32" Height="24" Background="Transparent" Foreground="#8b949e" BorderThickness="0" Cursor="Hand" FontSize="16" ToolTip="Identity and sign in"/>
+          <Button x:Name="BtnWizard" Content="✦" Width="32" Height="24" FontSize="16" Background="Transparent" Foreground="#58a6ff" BorderThickness="0" Cursor="Hand" Margin="2,0,0,0" ToolTip="K'UHUL Shaman — guided program forge"/>
           <TextBlock x:Name="UserNameText" Text="" FontSize="11" Foreground="#8b949e" VerticalAlignment="Center" Margin="4,0,8,0"/>
           <ComboBox x:Name="ModelSelector" Width="140" Height="22" FontSize="10" Background="#0d1117" Foreground="#e2e8f0" BorderBrush="#30363d" Margin="4,0,0,0" VerticalAlignment="Center" ToolTip="Select active model"/>
           <Button x:Name="BtnClose" Content="X" Width="28" Height="22" Background="Transparent" Foreground="#8b949e" BorderThickness="0" Cursor="Hand" FontSize="12"/>
@@ -452,10 +657,10 @@ foreach ($s in $script:PyScripts) {
         </Grid.RowDefinitions>
         <Border Grid.Row="0" Background="#161b22" BorderBrush="#30363d" BorderThickness="0,0,0,1" Padding="8,4">
           <StackPanel Orientation="Horizontal">
-            <Button x:Name="BtnShowSidebar" Content="[=]" Width="32" Height="22" FontSize="10" Background="Transparent" Foreground="#8b949e" BorderThickness="0" Padding="0" Cursor="Hand"/>
+            <Button x:Name="BtnShowSidebar" Content="☰" Width="32" Height="24" FontSize="16" Background="Transparent" Foreground="#8b949e" BorderThickness="0" Padding="0" Cursor="Hand" ToolTip="Show chat sidebar"/>
             <TextBlock x:Name="ChatTitleBar" Text="  Micronaut Chat" FontSize="12" Foreground="#8b949e" VerticalAlignment="Center" Margin="8,0,0,0"/>
-            <Button x:Name="BtnSvg" Content="[V]" Width="32" Height="22" FontSize="10" Background="Transparent" Foreground="#8b949e" BorderThickness="0" Padding="0" Cursor="Hand" Margin="6,0,0,0" ToolTip="Phase visualizer"/>
-            <Button x:Name="BtnInspector" Content="[I]" Width="28" Height="22" FontSize="10" Background="Transparent" Foreground="#8b949e" BorderThickness="0" Padding="0" Cursor="Hand" Margin="2,0,0,0" ToolTip="Runtime Inspector"/>
+            <Button x:Name="BtnSvg" Content="◉" Width="32" Height="24" FontSize="17" Background="Transparent" Foreground="#00bcd4" BorderThickness="0" Padding="0" Cursor="Hand" Margin="6,0,0,0" ToolTip="Phase Manifold"/>
+            <Button x:Name="BtnInspector" Content="▦" Width="32" Height="24" FontSize="17" Background="Transparent" Foreground="#a78bfa" BorderThickness="0" Padding="0" Cursor="Hand" Margin="2,0,0,0" ToolTip="Runtime Inspector"/>
           </StackPanel>
         </Border>
         <ScrollViewer Grid.Row="1" x:Name="FeedScroll" VerticalScrollBarVisibility="Auto" Background="#0d1117">
@@ -2679,13 +2884,14 @@ function Invoke-FluxCommand($msg) {
 function Initialize-SessionDb { if (-not $script:SessionDb) { try { $p = Join-Path $PSScriptRoot ".users\database.json"; $script:SessionDb = New-Object NeuralGrammar.Core.UserDatabase($p) } catch { } } }
 function Show-LoginDialog {
     Initialize-SessionDb
-    $dlg = New-Object Windows.Window; $dlg.Title = "Sign In"; $dlg.Width = 380; $dlg.Height = 280
+    $dlg = New-Object Windows.Window; $dlg.Title = "Sign In"; $dlg.Width = 380; $dlg.Height = 330
     $dlg.WindowStartupLocation = "CenterOwner"; $dlg.Owner = $window
     $dlg.Background = '#0d1117'; $dlg.Foreground = '#e2e8f0'; $dlg.FontFamily = "Consolas"
     $dlg.ResizeMode = "NoResize"; $dlg.WindowStyle = "SingleBorderWindow"; $dlg.Topmost = $true
     $g = [Windows.Controls.Grid]::new(); $g.Margin = '14'
-    for ($i=0;$i-lt6;$i++) { $g.RowDefinitions.Add((New-Object Windows.Controls.RowDefinition)); $g.RowDefinitions[$i].Height = [Windows.GridLength]::new(28) }
+    for ($i=0;$i-lt7;$i++) { $g.RowDefinitions.Add((New-Object Windows.Controls.RowDefinition)); $g.RowDefinitions[$i].Height = [Windows.GridLength]::new(28) }
     $g.RowDefinitions[4].Height = [Windows.GridLength]::new(36)
+    $g.RowDefinitions[5].Height = [Windows.GridLength]::new(42)
     $l1 = New-Object Windows.Controls.Label; $l1.Content = "Username:"; $l1.Foreground = '#58a6ff'; $l1.FontSize = 12
     [Windows.Controls.Grid]::SetRow($l1,0); $g.Children.Add($l1)
     $t1 = New-Object Windows.Controls.TextBox; $t1.Background = '#000'; $t1.Foreground = '#fff'; $t1.BorderBrush = '#30363d'
@@ -2699,8 +2905,16 @@ function Show-LoginDialog {
     $b2 = New-Object Windows.Controls.Button; $b2.Content = "Register"; $b2.Background = '#238636'; $b2.Foreground = 'White'; $b2.FontWeight = "Bold"; $b2.Width = 90; $b2.Height = 28
     $bp.Children.Add($b1); $bp.Children.Add($b2)
     [Windows.Controls.Grid]::SetRow($bp,4); $g.Children.Add($bp)
+    $googleButton = New-Object Windows.Controls.Button
+    $googleButton.Content = "Continue with Google"
+    $googleButton.Background = '#ffffff'
+    $googleButton.Foreground = '#202124'
+    $googleButton.FontWeight = "Bold"
+    $googleButton.Height = 30
+    $googleButton.Margin = '0,6,0,0'
+    [Windows.Controls.Grid]::SetRow($googleButton,5); $g.Children.Add($googleButton)
     $m = New-Object Windows.Controls.TextBlock; $m.Text = ""; $m.Foreground = '#86efac'; $m.FontSize = 11
-    [Windows.Controls.Grid]::SetRow($m,5); $g.Children.Add($m)
+    [Windows.Controls.Grid]::SetRow($m,6); $g.Children.Add($m)
     $b1.Add_Click({
         $user = $script:SessionDb.Authenticate($t1.Text, $t2.Password)
         if ($user) { $script:CurrentUser = $user; $script:CurrentSession = $script:SessionDb.CreateSession($user)
@@ -2709,6 +2923,45 @@ function Show-LoginDialog {
         } else { $m.Text = "Invalid"; $m.Foreground = '#da3633' }
     })
     $b2.Add_Click({ $u = $script:SessionDb.CreateUser($t1.Text, $t2.Password); if ($u) { $m.Text = "Created $($u.Username)"; $m.Foreground = '#3fb950' } else { $m.Text = "Exists"; $m.Foreground = '#da3633' } })
+    $googleButton.Add_Click({
+        try {
+            $clientSecret = Join-Path $csDir 'client_secret_1087870215155-5thubt90oitmog5c804et8gkg72qso1h.apps.googleusercontent.com.json'
+            $options = [NeuralGrammar.Core.GoogleOAuthOptions]::LoadFromClientSecretFile($clientSecret)
+            if (-not $options) {
+                throw "Google OAuth client configuration is unavailable."
+            }
+            $m.Text = "Opening Google sign-in..."
+            $m.Foreground = '#58a6ff'
+            if ($script:GoogleOAuth) {
+                try { $script:GoogleOAuth.Dispose() } catch {}
+            }
+            $script:GoogleOAuth = [NeuralGrammar.Core.GoogleOAuth]::new($options)
+            $null = $script:GoogleOAuth.GetAccessTokenAsync().GetAwaiter().GetResult()
+            $identity = $script:GoogleOAuth.GetIdentityAsync().GetAwaiter().GetResult()
+            if (-not $identity -or [string]::IsNullOrWhiteSpace($identity.GoogleId)) {
+                throw "Google did not return a usable identity."
+            }
+            $user = $script:SessionDb.GetOrCreateGoogleUser(
+                $identity.GoogleId,
+                $identity.Email,
+                $identity.Name,
+                [string[]] @('chat','search')
+            )
+            $script:CurrentUser = $user
+            $script:CurrentSession = $script:SessionDb.CreateSession($user)
+            $sessionFile = Join-Path $PSScriptRoot ".users\.last_session"
+            $null = [System.IO.Directory]::CreateDirectory(
+                [System.IO.Path]::GetDirectoryName($sessionFile)
+            )
+            $script:CurrentSession.Token |
+                Set-Content $sessionFile -NoNewline -ErrorAction SilentlyContinue
+            Update-ProfileUI
+            $dlg.Close()
+        } catch {
+            $m.Text = "Google sign-in failed: $($_.Exception.Message)"
+            $m.Foreground = '#da3633'
+        }
+    })
     $dlg.Content = $g; Show-ThemedDialog $dlg
 }
 
@@ -2758,6 +3011,120 @@ function Restore-Session {
     return $false
 }
 
+$script:PwaHostProcesses = @{}
+function Test-PwaPortAvailable {
+    param([int] $Port)
+    $probe = $null
+    try {
+        $probe = [System.Net.Sockets.TcpListener]::new(
+            [System.Net.IPAddress]::Loopback,
+            $Port
+        )
+        $probe.Start()
+        return $true
+    } catch {
+        return $false
+    } finally {
+        if ($probe) { try { $probe.Stop() } catch {} }
+    }
+}
+
+function Get-PwaProjectPort {
+    param([string] $UserId, [string] $ProjectName)
+    $seedBytes = [System.Security.Cryptography.SHA256]::HashData(
+        [System.Text.Encoding]::UTF8.GetBytes("$UserId/$ProjectName")
+    )
+    $start = 47000 + ([BitConverter]::ToUInt16($seedBytes, 0) % 1000)
+    for ($offset = 0; $offset -lt 1000; $offset++) {
+        $candidate = 47000 + (($start - 47000 + $offset) % 1000)
+        if (Test-PwaPortAvailable $candidate) { return $candidate }
+    }
+    throw "No user-project port is available in the reserved 47000–47999 range."
+}
+
+function Start-PwaProjectHost {
+    param(
+        [string] $ProjectId,
+        [string] $ProjectRoot,
+        [int] $Port
+    )
+    if ($script:PwaHostProcesses.ContainsKey($ProjectId)) {
+        $known = $script:PwaHostProcesses[$ProjectId]
+        if ($known -and -not $known.HasExited) { return "http://127.0.0.1:$Port/" }
+        $script:PwaHostProcesses.Remove($ProjectId)
+    }
+
+    if (-not (Test-PwaPortAvailable $Port)) {
+        try {
+            $manifest = Invoke-RestMethod `
+                -Uri "http://127.0.0.1:$Port/manifest.json" `
+                -TimeoutSec 1 `
+                -ErrorAction Stop
+            if ($manifest) { return "http://127.0.0.1:$Port/" }
+        } catch {
+            throw "Persisted PWA port $Port is owned by another process."
+        }
+    }
+
+    $python = (Get-Command python -ErrorAction Stop).Source
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $python
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.WorkingDirectory = $ProjectRoot
+    $startInfo.ArgumentList.Add('-m')
+    $startInfo.ArgumentList.Add('http.server')
+    $startInfo.ArgumentList.Add([string] $Port)
+    $startInfo.ArgumentList.Add('--bind')
+    $startInfo.ArgumentList.Add('127.0.0.1')
+    $startInfo.ArgumentList.Add('--directory')
+    $startInfo.ArgumentList.Add($ProjectRoot)
+    $process = [System.Diagnostics.Process]::Start($startInfo)
+    $script:PwaHostProcesses[$ProjectId] = $process
+    return "http://127.0.0.1:$Port/"
+}
+
+function Register-UserPwaProject {
+    param([string] $Name, [string] $ProjectRoot)
+    if (-not $script:CurrentUser -or -not $script:CurrentSession) {
+        throw "Sign in before creating an installable user PWA."
+    }
+    Initialize-SessionDb
+    $existing = $script:SessionDb.GetProject($script:CurrentUser.Id, $Name)
+    $port = if ($existing -and $existing.HostPort) {
+        [int] $existing.HostPort
+    } else {
+        Get-PwaProjectPort $script:CurrentUser.Id $Name
+    }
+    $url = "http://127.0.0.1:$port/"
+    $record = $script:SessionDb.UpsertProject(
+        $script:CurrentUser.Id,
+        $Name,
+        $ProjectRoot,
+        $port,
+        $url,
+        (Join-Path $ProjectRoot 'manifest.json'),
+        (Join-Path $ProjectRoot 'sw.js'),
+        'pwa'
+    )
+    $null = Start-PwaProjectHost $record.Id $ProjectRoot $port
+    return $record
+}
+
+function Restore-UserPwaHosts {
+    if (-not $script:CurrentUser -or -not $script:SessionDb) { return }
+    foreach ($project in $script:SessionDb.GetProjectsForUser($script:CurrentUser.Id)) {
+        if ($project.ProjectType -ne 'pwa' -or -not (Test-Path $project.RootPath)) {
+            continue
+        }
+        try {
+            $null = Start-PwaProjectHost $project.Id $project.RootPath $project.HostPort
+        } catch {
+            Write-Warning "PWA host unavailable for $($project.Name): $($_.Exception.Message)"
+        }
+    }
+}
+
 # Attachments
 $attachBtn.Add_Click({
     $ofd = New-Object Microsoft.Win32.OpenFileDialog; $ofd.Filter = "All|*.*"; $ofd.Multiselect = $true
@@ -2765,7 +3132,14 @@ $attachBtn.Add_Click({
 })
 
 # Send
-$script:SplashCtx = Show-SplashScreen
+$script:SplashCtx = if ($DesktopSplash) {
+    Show-SplashScreen
+} else {
+    # Studio owns the visual splash. Avoid allocating a second WPF HWND and
+    # render target during normal chat startup; this prevents Win32 quota 1816
+    # on browser-heavy desktops.
+    $null
+}
 Start-Sleep -Milliseconds 200
 Update-Splash $script:SplashCtx "Initializing runtime..." "Loading modules"
 $modelSelector.SelectedItem = $script:ActiveModel
@@ -2984,6 +3358,12 @@ $sendBtn.Add_Click({
                 if (-not $script:CheesePipeline) {
                     $script:CheesePipeline = [NeuralGrammar.Core.Runtime.CheesePipeline]::new((Join-Path $script:DataDir 'provenance'))
                 }
+                if (-not $script:FieldLearner) {
+                    # INLINE semantic field, learned from CHEESE verdicts via the @flux rule. Consumes
+                    # CheeseRecord only; writes only .learning/field -- never the model, prior, or promotion.
+                    $script:FieldStore   = [NeuralGrammar.Core.Runtime.SemanticFieldStore]::new((Join-Path $script:DataDir 'field'))
+                    $script:FieldLearner = [NeuralGrammar.Core.Runtime.FluxFieldLearner]::new($script:FieldStore, [double]0.1)
+                }
                 $cheeseEdges = @()
                 foreach ($c in $microContributions) {
                     $rels = @($c.Relations)
@@ -3002,6 +3382,33 @@ $sendBtn.Add_Click({
                         if ($c.Subject -and $t) { $cheeseEdges += [NeuralGrammar.Core.Runtime.CheesePipeline]::Edge([string]$c.Subject, [string]$c.Capability, [string]$t, [double]$c.Confidence) }
                     }
                 }
+                # Trinity (quantum_hybrid): on code-bearing turns, surface STRUCTURAL code edges
+                # (inherits/contains/declares/returns/typed) as extra CHEESE candidates. Guarded and
+                # code-gated -- chat turns add nothing here (no fabricated prose edges).
+                try {
+                    if (-not $script:TrinityExe) {
+                        $script:TrinityExe = Join-Path $script:Root 'bin\Quantum\build\quantum_hybrid.exe'
+                    }
+                    $looksCode = ($msg -match '```') -or (($msg -match '(?m)\b(namespace|class|interface|struct|enum)\s+\w') -and ($msg -match '[{}]'))
+                    if ($looksCode -and (Test-Path $script:TrinityExe)) {
+                        $codeText = if ($msg -match '(?s)```(?:\w+)?\r?\n(.*?)```') { $matches[1] } else { $msg }
+                        $req = @{ operation = 'extract_relations'; code = $codeText } | ConvertTo-Json -Compress
+                        $out = $req | & $script:TrinityExe 2>$null
+                        if ($out) {
+                            $tj = $out | ConvertFrom-Json
+                            if ($tj.status -eq 'success' -and $tj.edges) {
+                                $tn = 0
+                                foreach ($e in $tj.edges) {
+                                    if ($e.source -and $e.target) {
+                                        $cheeseEdges += [NeuralGrammar.Core.Runtime.CheesePipeline]::Edge([string]$e.source, [string]$e.relation, [string]$e.target, 0.8)
+                                        $tn++
+                                    }
+                                }
+                                if ($tn -gt 0) { Write-Console ("trinity: +$tn code edge(s)") "Tick" }
+                            }
+                        }
+                    }
+                } catch { Write-Console "trinity: $($_.Exception.Message)" "Error" }
                 if ($cheeseEdges.Count -gt 0) {
                     $selectedSubjects = @($microContributions | ForEach-Object { $_.Subject })
                     $rejected = @($relevantMicros | Where-Object { $_.d.subject -notin $selectedSubjects } | ForEach-Object { [string]$_.d.subject })
@@ -3013,6 +3420,9 @@ $sendBtn.Add_Click({
                         }
                         $script:TurnMeta.Sources.Cheese = $true
                         Write-Console ("CHEESE: $($sm.Edges) edges -> accepted=$($sm.Accepted) guarded=$($sm.Guarded) rejected=$($sm.Rejected)") "Phase"
+                        # @flux: reinforce the inline field from this turn's CHEESE verdicts (per-tick, real signal).
+                        $applied = $script:FieldLearner.LearnFromRecord($rec)
+                        if ($applied -gt 0) { Write-Console ("field: reinforced $applied edge(s) [$($script:FieldStore.Count) total]") "Tick" }
                     }
                 }
             } catch { Write-Console "cheese: $($_.Exception.Message)" "Error" }
@@ -3166,7 +3576,10 @@ $btnToggleSidebar.Add_Click({ $sidebarOpen = $false; $sidebarPanel.Visibility = 
 $btnNewChat.Add_Click({ New-Chat })
 if ($profileBox) { $profileBox.Add_MouseDown({ if ($script:CurrentUser) { Show-ProfileSettings } else { Show-LoginDialog } }) }
 $btnUser.Add_Click({ if ($script:CurrentUser) { Show-ProfileSettings } else { Show-LoginDialog } })
-if (Restore-Session) { Update-ProfileUI }
+if (Restore-Session) {
+    Update-ProfileUI
+    Restore-UserPwaHosts
+}
 
 $btnSvg = $window.FindName('BtnSvg')
 
@@ -3215,7 +3628,7 @@ function Show-SvgVisualizer {
 }
 
 $btnWizard = $window.FindName('BtnWizard')
-function Show-WizardDialog {
+function Show-LegacyWizardDialog {
     $wizDir = Join-Path $PSScriptRoot "projects"; if (-not (Test-Path $wizDir)) { New-Item -ItemType Directory -Path $wizDir -Force | Out-Null }
     $dlg = New-Object Windows.Window; $dlg.Title = "K'UHUL SHAMAN"; $dlg.Width = 680; $dlg.Height = 560
     $dlg.WindowStartupLocation = "CenterOwner"; $dlg.Owner = $window; $dlg.Background = '#000000'; $dlg.Foreground = '#ffffff'; $dlg.FontFamily = "Consolas"
@@ -3319,6 +3732,262 @@ function Show-WizardDialog {
     [Windows.Controls.Grid]::SetRow($bp,5); $g.Children.Add($bp)
     $dlg.Content = $g; Show-ThemedDialog $dlg
 }
+
+function Show-WizardDialog {
+    $wizardHtml = Join-Path $PSScriptRoot "schemas\themes\kuhul-shaman-wizard.html"
+    if (-not (Test-Path $wizardHtml)) {
+        Show-LegacyWizardDialog
+        return
+    }
+
+    $wizDir = Join-Path $PSScriptRoot "projects"
+    if (-not (Test-Path $wizDir)) {
+        New-Item -ItemType Directory -Path $wizDir -Force | Out-Null
+    }
+
+    $dlg = New-Object Windows.Window
+    $dlg.Title = "K'UHUL SHAMAN — Six-Phase Program Forge"
+    $dlg.Width = 930
+    $dlg.Height = 740
+    $dlg.MinWidth = 820
+    $dlg.MinHeight = 650
+    $dlg.WindowStartupLocation = "CenterOwner"
+    $dlg.Owner = $window
+    $dlg.Background = '#0b1018'
+
+    $browser = New-Object System.Windows.Controls.WebBrowser
+    $dlg.Content = $browser
+
+    $sendResult = {
+        param([string]$Message, [bool]$Success)
+        try { $browser.InvokeScript('setResult', @($Message, $Success)) | Out-Null } catch {}
+    }
+
+    $showHtml = {
+        if (-not $script:LastShamanHtml -or -not (Test-Path $script:LastShamanHtml)) {
+            & $sendResult "No HTML projection exists yet. Compile or generate a PWA first." $false
+            return
+        }
+        try {
+            $preview = New-Object Windows.Window
+            $preview.Title = "K'UHUL Program Projection"
+            $preview.Width = 850
+            $preview.Height = 720
+            $preview.WindowStartupLocation = "CenterOwner"
+            $preview.Owner = $dlg
+            $preview.Background = '#0d1117'
+            $previewBrowser = New-Object System.Windows.Controls.WebBrowser
+            $preview.Content = $previewBrowser
+            $preview.Add_Loaded({
+                $previewBrowser.Navigate(([uri]([System.IO.Path]::GetFullPath($script:LastShamanHtml))))
+            })
+            $null = $preview.ShowDialog()
+        } catch {
+            & $sendResult "Projection failed: $($_.Exception.Message)" $false
+        }
+    }
+
+    $compileProject = {
+        param($Payload)
+        $name = [string]$Payload.name
+        try {
+            & $sendResult "Sek: scaffolding and validating $name..." $true
+            $src = [NeuralGrammar.Core.MicronautWizard]::Scaffold(
+                (Join-Path $PSScriptRoot "schemas\programs"), "Custom", $name
+            )
+            $reg = [NeuralGrammar.Core.MicronautRegister]::new()
+            $result = [NeuralGrammar.Core.MicronautWizard]::Compile($src, $reg)
+            if (-not $result.Success) {
+                & $sendResult "Compile rejected: $($result.Error)" $false
+                return
+            }
+            $html = [NeuralGrammar.Core.HtmlViewer]::WrapProgram($src)
+            $htmlPath = [System.IO.Path]::ChangeExtension($src, ".html")
+            Set-Content -LiteralPath $htmlPath -Value $html -Encoding UTF8
+            $script:LastShamanHtml = $htmlPath
+            & $sendResult "Xul complete: $($result.InstalledNodeCount) nodes; HTML projection ready." $true
+        } catch {
+            & $sendResult "Compile failed: $($_.Exception.Message)" $false
+        }
+    }
+
+    $generateProject = {
+        param($Payload)
+        if ($dlg.Tag -and $dlg.Tag.Task -and -not $dlg.Tag.Task.IsCompleted) {
+            & $sendResult "A Shaman generation is already running." $false
+            return
+        }
+        $name = [string]$Payload.name
+        $description = [string]$Payload.description
+        $modeNames = @{
+            program = "Kuhul Program (.kuhul)"
+            micronaut = "Kuhul Micronaut (.kuhul + manifest)"
+            pwa = "Kuhul App PWA (index.html + manifest.kuhul + sw.khl)"
+        }
+        $selectedMode = $modeNames[[string]$Payload.mode]
+        if (-not $selectedMode) { $selectedMode = $modeNames.program }
+        if ([string]$Payload.mode -eq 'pwa' -and -not $script:CurrentUser) {
+            & $sendResult "Sign in before creating an installable user PWA." $false
+            return
+        }
+
+        try {
+            & $sendResult "Ch'en: requesting an authority-free local model candidate..." $true
+            $examples = @()
+            $programDir = Join-Path $PSScriptRoot "schemas\programs"
+            if (Test-Path $programDir) {
+                foreach ($file in Get-ChildItem $programDir -Filter "*.kuhul" |
+                    Sort-Object Name | Select-Object -First 2) {
+                    $content = Get-Content $file.FullName -Raw -ErrorAction SilentlyContinue
+                    if ($content -and $content.Length -gt 2500) {
+                        $content = $content.Substring(0, 2500)
+                    }
+                    if ($content) { $examples += "=== $($file.Name) ===`n$content" }
+                }
+            }
+            $body = @{
+                messages = @(
+                    @{ role = "system"; content = "You are a KUHUL candidate generator. Output only valid .kuhul source. You have no execution authority." }
+                    @{ role = "user"; content = "Reference programs:`n$($examples -join "`n---`n")" }
+                    @{ role = "user"; content = "Create a $selectedMode named '$name'. $description" }
+                )
+                max_tokens = 384
+                temperature = 0.3
+                stream = $false
+            } | ConvertTo-Json -Depth 4 -Compress
+
+            $client = [System.Net.Http.HttpClient]::new()
+            $client.Timeout = [TimeSpan]::FromMinutes(5)
+            $content = [System.Net.Http.StringContent]::new(
+                $body,
+                [System.Text.Encoding]::UTF8,
+                'application/json'
+            )
+            $task = $client.PostAsync(
+                "$($script:Endpoint)/v1/chat/completions",
+                $content
+            )
+            $timer = New-Object Windows.Threading.DispatcherTimer
+            $timer.Interval = [TimeSpan]::FromMilliseconds(200)
+            $dlg.Tag = [PSCustomObject]@{
+                Task = $task
+                Timer = $timer
+                Client = $client
+                Content = $content
+                Payload = $Payload
+                Name = $name
+                UserId = if ($script:CurrentUser) { $script:CurrentUser.Id } else { $null }
+            }
+            $timer.Add_Tick(({
+                $state = $dlg.Tag
+                if (-not $state -or -not $state.Task.IsCompleted) { return }
+                $state.Timer.Stop()
+                try {
+                    $httpResponse = $state.Task.GetAwaiter().GetResult()
+                    $json = $httpResponse.Content.ReadAsStringAsync().
+                        GetAwaiter().GetResult()
+                    if (-not $httpResponse.IsSuccessStatusCode) {
+                        throw "Model server returned HTTP $([int]$httpResponse.StatusCode): $json"
+                    }
+                    $response = $json | ConvertFrom-JsonSafe
+                    $code = [string]$response.choices[0].message.content
+                    if ([string]::IsNullOrWhiteSpace($code)) {
+                        throw "The model returned an empty candidate."
+                    }
+                    if ($code -match '```(?:kuhul)?\s*\r?\n([\s\S]*?)\r?\n\s*```') {
+                        $code = $matches[1]
+                    }
+
+                    $projectDir = if ([string]$state.Payload.mode -eq 'pwa') {
+                        Join-Path $PSScriptRoot ".users\projects\$($state.UserId)\$($state.Name)"
+                    } else {
+                        Join-Path $wizDir $state.Name
+                    }
+                    New-Item -ItemType Directory -Path $projectDir -Force | Out-Null
+                    Set-Content -LiteralPath (Join-Path $projectDir "$($state.Name).kuhul") -Value $code -Encoding UTF8
+
+                    if ([string]$state.Payload.mode -eq 'pwa') {
+                        $encodedName = [System.Net.WebUtility]::HtmlEncode($state.Name)
+                        $index = @"
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#16f2aa"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg" type="image/svg+xml"><title>$encodedName</title><style>body{background:#0b1018;color:#dbeafe;font:14px Consolas;padding:32px}h1{color:#39e6c3}button{background:#16f2aa;color:#04110d;border:0;border-radius:7px;padding:10px 14px;font-weight:bold}</style></head><body><h1>$encodedName</h1><div id="output">K'UHUL program admitted.</div><p><button id="install" hidden>Install $encodedName</button></p><script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}let p;addEventListener('beforeinstallprompt',e=>{e.preventDefault();p=e;document.getElementById('install').hidden=false});document.getElementById('install').onclick=async()=>{if(!p)return;p.prompt();await p.userChoice;p=null;document.getElementById('install').hidden=true};</script></body></html>
+"@
+                        Set-Content -LiteralPath (Join-Path $projectDir "index.html") -Value $index -Encoding UTF8
+                        $manifest = @{
+                            id = './'
+                            name = $state.Name
+                            short_name = $state.Name.Substring(0, [Math]::Min(12, $state.Name.Length))
+                            start_url = './'
+                            scope = './'
+                            display = 'standalone'
+                            background_color = '#0b1018'
+                            theme_color = '#16f2aa'
+                            icons = @(@{ src = 'icon.svg'; sizes = 'any'; type = 'image/svg+xml'; purpose = 'any maskable' })
+                        } | ConvertTo-Json -Depth 5
+                        Set-Content -LiteralPath (Join-Path $projectDir "manifest.json") -Value $manifest -Encoding UTF8
+                        $serviceWorker = "const C='pwa-$($state.Name)-v1',A=['./','index.html','manifest.json','icon.svg','$($state.Name).kuhul'];self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(A))));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{let x=r.clone();caches.open(C).then(c=>c.put(e.request,x));return r}).catch(()=>caches.match(e.request).then(r=>r||(e.request.mode==='navigate'?caches.match('./'):undefined))))});"
+                        Set-Content -LiteralPath (Join-Path $projectDir "sw.js") -Value $serviceWorker -Encoding UTF8
+                        $icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='#0b1018'/><circle cx='256' cy='256' r='150' fill='none' stroke='#16f2aa' stroke-width='32'/><path d='M170 275l58 58 120-148' fill='none' stroke='#61e7ff' stroke-width='34' stroke-linecap='round'/></svg>"
+                        Set-Content -LiteralPath (Join-Path $projectDir "icon.svg") -Value $icon -Encoding UTF8
+                        $project = Register-UserPwaProject $state.Name $projectDir
+                        $script:LastShamanHtml = Join-Path $projectDir "index.html"
+                        Start-Process -FilePath $project.HostUrl | Out-Null
+                        & $sendResult "Xul complete: PWA hosted at $($project.HostUrl). Use its Install button to confirm installation." $true
+                        return
+                    }
+                    & $sendResult "Xul complete: candidate saved to $projectDir" $true
+                } catch {
+                    & $sendResult "Generation failed: $($_.Exception.Message)" $false
+                } finally {
+                    try { $state.Content.Dispose() } catch {}
+                    try { $state.Client.Dispose() } catch {}
+                    $dlg.Tag = $null
+                }
+            }).GetNewClosure())
+            $timer.Start()
+        } catch {
+            & $sendResult "Generation failed: $($_.Exception.Message)" $false
+        }
+    }
+
+    $browser.Add_Navigating({
+        param($sender, $eventArgs)
+        if (-not $eventArgs.Uri -or $eventArgs.Uri.Scheme -ne 'nnck') { return }
+        $eventArgs.Cancel = $true
+        try {
+            $query = $eventArgs.Uri.Query.TrimStart('?')
+            if (-not $query.StartsWith('payload=')) { throw "Missing Shaman action payload." }
+            $json = [System.Uri]::UnescapeDataString($query.Substring(8))
+            $payload = $json | ConvertFrom-JsonSafe
+            if (-not $payload) { throw "Invalid Shaman action payload." }
+
+            if ($payload.action -eq 'close') { $dlg.Close(); return }
+            if ($payload.action -eq 'view') { & $showHtml; return }
+            if ([string]$payload.name -notmatch '^[A-Za-z][A-Za-z0-9_-]{1,63}$') {
+                & $sendResult "Use 2–64 letters, numbers, hyphens, or underscores; begin with a letter." $false
+                return
+            }
+            if ($payload.action -eq 'generate') { & $generateProject $payload; return }
+            if ($payload.action -eq 'compile') { & $compileProject $payload; return }
+            throw "Unknown Shaman action: $($payload.action)"
+        } catch {
+            & $sendResult $_.Exception.Message $false
+        }
+    })
+
+    $dlg.Add_Loaded({
+        $browser.Navigate(([uri]([System.IO.Path]::GetFullPath($wizardHtml))))
+    })
+    $dlg.Add_Closed({
+        if ($dlg.Tag) {
+            try { $dlg.Tag.Timer.Stop() } catch {}
+            try { $dlg.Tag.Client.CancelPendingRequests() } catch {}
+            try { $dlg.Tag.Content.Dispose() } catch {}
+            try { $dlg.Tag.Client.Dispose() } catch {}
+            $dlg.Tag = $null
+        }
+    })
+    $null = $dlg.ShowDialog()
+}
 if ($btnWizard) { $btnWizard.Add_Click({ Show-WizardDialog }) }
 
 Close-Splash $script:SplashCtx
@@ -3326,7 +3995,6 @@ Add-Sys "Micronaut Chat: ready"
 Write-Console "K'UHUL runtime initialized" "System"
 Write-Console "Models: LFM (BASE) / GPT-OSS (BOSS)" "Model"
 Write-Console "Register: wait for micronauts" "Phase"
-$btnWizard.Add_Click({ Show-WizardDialog })
 $btnSvg.Add_Click({ Show-SvgVisualizer })
 $btnInspector = $window.FindName('BtnInspector')
 if ($btnInspector) { $btnInspector.Add_Click({ Show-RuntimeInspector }) }
@@ -3567,6 +4235,22 @@ function Show-TickInspector($tick) {
     $dlg.Content = $g; Show-ThemedDialog $dlg
 }
 
-$null = $window.ShowDialog()
+try {
+    if ($ChatSmokeTest) {
+        $smokeTimer = New-Object Windows.Threading.DispatcherTimer
+        $smokeTimer.Interval = [TimeSpan]::FromSeconds(1)
+        $smokeTimer.Add_Tick({
+            $smokeTimer.Stop()
+            $window.Close()
+        })
+        $smokeTimer.Start()
+    }
+    $null = $window.ShowDialog()
+} finally {
+    if ($script:ChatInstanceMutex) {
+        try { $script:ChatInstanceMutex.ReleaseMutex() } catch {}
+        $script:ChatInstanceMutex.Dispose()
+    }
+}
 
 
