@@ -140,13 +140,16 @@ specialized D3D11 sidecar for selected MoE expert `.xshard` matrices, not a
 general BLAS GEMM.
 
 OpenCL CPU is a reach/portability fallback, not the primary compute lane. The
-Intel OpenCL ICD (`IntelOpenCL64.dll`) and Clang compiler (`common_clang64.dll`)
-are present, so NNC-K can generate and compile OpenCL C 1.2 kernels — but the
-OpenCL *CPU runtime* components (`ocl_cpu_*.dll`: device, backend, task executor,
-TBB) are **not installed on this host**, so there is no CPU device to dispatch to
-(`--providers` lists them as not found). Native OpenCL dispatch is therefore
-neither wired nor currently runnable here; `opencl_helper` only probes for a
-device. DirectML via `ggml-xcfe` remains the working GEMM path.
+full Intel OpenCL CPU runtime **is present** on this host, but in a driver-package
+directory (`C:\DRIVERS\VDO\...\Gfx\{guid}\`) that is off the default DLL search
+path — which is why a default `--providers` run reports the `ocl_cpu_*` components
+as not found. Point `KUHUL_DRIVER_ROOT` at that directory and `kuhul_engine
+--providers` then reports the CPU device, backend, task executor, TBB, and Clang
+compiler as **available** (`opencl_helper` reads `KUHUL_DRIVER_ROOT` for exactly
+this). So the OpenCL CPU device is usable at the runtime level; what remains
+un-wired is the native dispatch path itself — `opencl_helper` currently only
+probes for a device, with no `clCreateProgramWithSource` / `clEnqueueNDRangeKernel`
+GEMM. DirectML via `ggml-xcfe` remains the primary, verified GEMM path.
 
 Gemma is a separate model family. Local Gemma GGUF models are downloaded from
 Hugging Face rather than stored in this repository. Verified repositories:
