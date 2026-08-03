@@ -3387,10 +3387,15 @@ $sendBtn.Add_Click({
                 # code-gated -- chat turns add nothing here (no fabricated prose edges).
                 try {
                     if (-not $script:TrinityExe) {
-                        $script:TrinityExe = Join-Path $script:Root 'bin\Quantum\build\quantum_hybrid.exe'
+                        # distributed location (windows-binaries.zip -> bin\Quantum\) first,
+                        # then a fresh dev build under build\
+                        $script:TrinityExe = @(
+                            (Join-Path $script:Root 'bin\Quantum\quantum_hybrid.exe'),
+                            (Join-Path $script:Root 'bin\Quantum\build\quantum_hybrid.exe')
+                        ) | Where-Object { Test-Path $_ } | Select-Object -First 1
                     }
                     $looksCode = ($msg -match '```') -or (($msg -match '(?m)\b(namespace|class|interface|struct|enum)\s+\w') -and ($msg -match '[{}]'))
-                    if ($looksCode -and (Test-Path $script:TrinityExe)) {
+                    if ($looksCode -and $script:TrinityExe -and (Test-Path $script:TrinityExe)) {
                         $codeText = if ($msg -match '(?s)```(?:\w+)?\r?\n(.*?)```') { $matches[1] } else { $msg }
                         $req = @{ operation = 'extract_relations'; code = $codeText } | ConvertTo-Json -Compress
                         $out = $req | & $script:TrinityExe 2>$null
