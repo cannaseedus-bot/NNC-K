@@ -1,3 +1,0 @@
-display_name: Micronaut Builder from MX-2
-short_description: Create new Micronaut bundles from the locked MX-2 example without editing the source tree.
-default_prompt: Use the locked MX-2 bundle as a read-only template. Build a new Micronaut bundle in a separate target folder, preserve the directory shape, and rewrite paths so the new bundle is self-contained.

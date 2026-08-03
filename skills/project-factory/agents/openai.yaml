@@ -1,4 +1,0 @@
-interface:
-  display_name: "Project Factory"
-  short_description: "Scaffold agent/skill infrastructure for any project"
-  default_prompt: "Set up this project so AI agents can work in it effectively"

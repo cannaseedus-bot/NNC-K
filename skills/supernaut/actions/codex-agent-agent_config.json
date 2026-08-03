@@ -1,7 +1,0 @@
-{
-  "profile": "codex-root",
-  "mode": "hybrid",
-  "backend": "manifest",
-  "manifestPath": "../../../model/manifest.json",
-  "preferGta1": false
-}

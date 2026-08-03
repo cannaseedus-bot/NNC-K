@@ -1,4 +1,0 @@
-interface:
-  display_name: "AS-XCFE Stack Intel"
-  short_description: "Deep repo audit and missing-parts roadmap."
-  default_prompt: "Run the 5-phase/20-step stack-intel audit for this repo. Output: Stack Map, Folder Intel (depth=2, sorted), Contracts & Specimens, Gaps with evidence, Next Path branched from gaps, and a Deterministic Summary JSON block with a stable summary hash."

@@ -1,69 +1,46 @@
-# Node.js
-node_modules/
-.GSTmp/
-.DS_Store
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# NNC-K — user secrets and runtime data
+.users/
+.learning/chats/
+.learning/flux/
+.learning/*.jsonl
+.learning/xshard_gguf/
+.learning/xshard_samples/
+src/NeuralGrammar.Core/client_secret_*.json
+bin/*.exe
+bin/*.dll
+bin/*.pdb
+# Keep built .NET worker executables; ignore build intermediates
+!bin/dotnet-workers/**/bin/Release/net9.0/Micronaut.Worker.Host*
+!bin/dotnet-workers/**/bin/Release/net9.0/*.exe
+!bin/dotnet-workers/**/bin/Release/net9.0/*.dll
+!bin/dotnet-workers/**/bin/Release/net9.0/*.runtimeconfig.json
+!bin/dotnet-workers/**/Workers/Micronaut.Worker.Host*
+bin/dotnet-workers/**/obj/
+bin/dotnet-workers/**/bin/Release/net9.0/ref/
+bin/dotnet-workers/**/bin/Release/net9.0/refint/
+*.log
+store/
+.store/
 
 # Build artifacts
-/dist
-/build
-
-# Test coverage
-/coverage
-
-# Native build artifacts
-*.cso
-*.pdb
-*.obj
-*.lib
-*.exp
-*.ilk
-*.idb
-
-# Model weights (large binaries — tracked by hash in docs)
-*.safetensors
-*.gguf
-*.pt
-*.bin
-*.dds
-*.scxq2
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-.venv/
-venv/
-
-# Logs
-*.log
-
-# Native binaries — source headers only, not executables or WebView2 data
-native/bin/
-native/wv2_*/
-native/shaders/*.cso
-native/d3d12_compute/build/
-*.exe
-*.dll
-*.pma
-*.pdb
-
-# WebView2 profile data
-**/wv2_data/
-**/EBWebView/
-
-# .NET build artifacts
 **/obj/
 **/bin/
-*.cache
-*.nuget.cache
-*.AssemblyReference.cache
-*.CoreCompileInputs.cache
-*.FileListAbsolute.txt
-*.Up2Date
-*.genruntimeconfig.cache
+*.csproj.user
+*.suo
+.vs/
 
-# Trainer runtime (stays at .gpu_trainer, not in repo)
-.gpu_trainer/
+# Temporary files
+*.tmp
+*.crdownload
+~$*
+
+# --- slim (2026-08-02): vendored/stock/example/experiment trees (untracked; on disk + in history) ---
+/dotnet/
+/skills/
+/examples/
+/shaders/
+/models/
+/model/
+/dotnet-workers/
+/dotnet-bridge/
+/tools/

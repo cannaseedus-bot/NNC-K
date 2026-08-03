@@ -1,3 +1,0 @@
-display_name: MX2LM Local Agent
-short_description: Local MX2LM model, commands, and skill routing.
-default_prompt: Use the local MX2LM model server, command registry, and designed UI to route agent, skill, and command actions. Prefer local endpoints and manifest-backed routes.

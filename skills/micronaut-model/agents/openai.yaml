@@ -1,4 +1,0 @@
-interface:
-  display_name: "Micronaut Model Factory"
-  short_description: "Define, scaffold, and register xjson micro-models with any weight backend"
-  default_prompt: "Create a new micronaut model with local GGUF weights"

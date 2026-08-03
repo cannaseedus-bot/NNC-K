@@ -1,3 +1,0 @@
-display_name: Bot Builder
-short_description: Build and invoke DX11 bot pipelines
-default_prompt: Use the bot-builder skill to map a goal onto the GPT-2 DX11 bot helper bundle, choose helper methods, compose a pipeline, and run or extend it with the local orchestrator.

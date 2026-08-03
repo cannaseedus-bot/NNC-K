@@ -1,4 +1,0 @@
-interface:
-  display_name: "Workflow Orchestrator"
-  short_description: "Project planning, task breakdowns, and workflow automation"
-  default_prompt: "Help me plan and orchestrate this project step-by-step."

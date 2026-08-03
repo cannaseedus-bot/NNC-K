@@ -1,7 +1,0 @@
-// Hello World in K'UHUL++ v2.0
-// The simplest possible K'UHUL++ program — declares a Tensor holding a greeting.
-
-Tensor message = "Hello, KUHUL World!";
-
-// Output the message (in a browser or runtime environment the host
-// reads the 'message' binding from the execution result).

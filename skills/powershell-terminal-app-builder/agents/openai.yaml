@@ -1,3 +1,0 @@
-display_name: PowerShell Terminal App Builder
-short_description: Launch and build Micronaut-style PowerShell terminal and app-builder flows from the locked KUHUL/MX2 bundle.
-default_prompt: Use the locked KUHUL/MX2 PowerShell entrypoints as read-only surfaces. Launch or build the requested terminal, IDE/code-editor, or app-builder flow locally without modifying the base bundle.
