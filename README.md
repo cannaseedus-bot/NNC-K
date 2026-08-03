@@ -130,17 +130,23 @@ explicit unbinding, staging readback, numerical stability, and the practical
 
 ### GEMM, OpenCL CPU, and model selection
 
-The development host has Intel's LLVM-based OpenCL CPU driver components,
-including a Clang OpenCL compiler, CPU backend, task executor, and OpenCL ICD.
-NNC-K currently generates OpenCL C 1.2 kernels, but it does not yet load and
-dispatch them through a native OpenCL context. Until that adapter is admitted
-and validated, the C# training pipeline reports a managed CPU fallback.
+GEMM is the matrix operation `C = alpha * A * B + beta * C`. The primary,
+GPU-accelerated path is `ggml-xcfe`, which registers a ggml backend and computes
+`MUL_MAT` through **DirectML** — verified against the ggml CPU reference
+(`xcfe_matmul_test`: max abs err ≈ 6e-7; `xcfe_probe` reports the XCFE backend
+registered). `kuhul_engine --providers` confirms `directml`, `xcfe_directml`,
+`d3d11`, and `d3d12` are available on this host. `asx_gemm.exe` is a separate
+specialized D3D11 sidecar for selected MoE expert `.xshard` matrices, not a
+general BLAS GEMM.
 
-GEMM is the matrix operation `C = alpha * A * B + beta * C`. NNC-K's
-`asx_gemm.exe` is a specialized D3D11 sidecar for selected MoE expert
-`.xshard` matrices; it is not yet a complete BLAS GEMM implementation. The
-planned OpenCL backend can provide a CPU-dispatched GEMM lane after native
-dispatch and CPU-reference conformance are implemented.
+OpenCL CPU is a reach/portability fallback, not the primary compute lane. The
+Intel OpenCL ICD (`IntelOpenCL64.dll`) and Clang compiler (`common_clang64.dll`)
+are present, so NNC-K can generate and compile OpenCL C 1.2 kernels — but the
+OpenCL *CPU runtime* components (`ocl_cpu_*.dll`: device, backend, task executor,
+TBB) are **not installed on this host**, so there is no CPU device to dispatch to
+(`--providers` lists them as not found). Native OpenCL dispatch is therefore
+neither wired nor currently runnable here; `opencl_helper` only probes for a
+device. DirectML via `ggml-xcfe` remains the working GEMM path.
 
 Gemma is a separate model family. Local Gemma GGUF models are downloaded from
 Hugging Face rather than stored in this repository. Verified repositories:
