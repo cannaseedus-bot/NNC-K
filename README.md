@@ -1,3 +1,5 @@
+<p align="center"><img src="./logo.svg" alt="NNC-K" width="620"></p>
+
 # NNC-K
 
 NNC-K is a contract-driven neural meta-runtime that joins Neural Net Code,
@@ -8,11 +10,13 @@ binding the application to one model or one inference backend.
 
 ## Start Here
 
-Requirements: Windows 10+, PowerShell 7, Node.js 14+, npm, and Python.
+Requirements: Windows 10+, PowerShell 7, Node.js 14+, npm, and Python. Rust,
+the `wasm32-unknown-unknown` target, and `wasm-pack` are additionally required
+for SVG3D/KXML WebAssembly development.
 
 ```powershell
-git clone https://github.com/cannaseedus-bot/WebX.git
-cd WebX
+git clone https://github.com/cannaseedus-bot/NNC-K.git
+cd NNC-K
 npm install
 python -m pip install -r requirements.txt
 Expand-Archive .\bin\windows-binaries.zip -DestinationPath . -Force
@@ -50,17 +54,54 @@ NNC-K separates responsibilities:
 
 Read [NNC-K.md](NNC-K.md) for the architecture and system boundaries.
 
+## Persistent Topic Memory and Confidence
+
+Micronaut confidence is visible runtime state, not a claim that the model is
+scientifically correct. In this captured exchange, clarification and
+constraint updates move the topic route from unresolved `0` to `0.70`,
+`0.90`, and `0.95`. Accepted topic state is persisted and mounted into the
+Micronaut register, allowing a later related question to retrieve learned
+constraints instead of starting from zero. Confidence is recomputed on every
+prompt.
+
+| Unresolved: `0` | Corrected: `0.70` |
+| --- | --- |
+| [![Unresolved topic confidence](docs/screenshots/micronaut-confidence-00.png)](docs/screenshots/micronaut-confidence-00.png) | [![Corrected topic confidence](docs/screenshots/micronaut-confidence-07.png)](docs/screenshots/micronaut-confidence-07.png) |
+
+| Constrained: `0.90` | Refined and persisted: `0.95` |
+| --- | --- |
+| [![Constrained topic confidence](docs/screenshots/micronaut-confidence-09.png)](docs/screenshots/micronaut-confidence-09.png) | [![Refined topic confidence](docs/screenshots/micronaut-confidence-095.png)](docs/screenshots/micronaut-confidence-095.png) |
+
+See the [confidence and memory walkthrough](docs/chat-bubble-metadata.md) for
+the factory baseline, badge fields, persistence behavior, and restart test.
+
 ## K'UHUL Execution
 
 The common phase lifecycle is:
 
 ```text
-Pop -> Wo -> Yax -> Sek -> Ch'en -> Xul
+Pop
+↓
+Wo
+↓
+Yax
+↓
+Sek
+↓
+Ch'en
+↓
+Xul
+↓
+Collapse
+↓
+CHEESE
+↓
+@flux
+↓
+BossPromotion
 ```
 
-It establishes context, transforms and resolves state, executes a bounded
-action, persists an admitted result, and closes the cycle. Language sources,
-compiler stages, runtime code, tests, and examples live under `kuhul/`.
+Runtime judgment and promotion occur after Xul and are performed by the runtime rather than by the model. Language sources, compiler stages, runtime code, tests, and examples live under `kuhul/`.
 
 ## Hot-Swappable `.xshard` Models
 
@@ -169,7 +210,20 @@ points.
 - [NNC-K inference](docs/nnc-k-inference.md)
 - [ASX RAM attention](docs/asx-ram-attention.md)
 - [GPT-OSS shard bridge](docs/gpt-oss-shard-bridge.md)
+- [MM-CODER models and WASM AST runtime](docs/MODELS.md#mm-coder-ast-runtime)
 - [Contributor guidelines](AGENTS.md)
+
+## Related repositories
+
+NNC-K is the runtime home; three subsystems are isolated into their own repos so
+each can evolve independently:
+
+| Repo | What |
+| --- | --- |
+| [NNC-K](https://github.com/cannaseedus-bot/NNC-K) | this repo — C# runtime, Micronauts, UI, and the K'UHUL language |
+| [WebX](https://github.com/cannaseedus-bot/WebX) | K'UHUL Semantic Engine (`kuhul_engine`) — unified native D3D11/12 binary |
+| [XJSON](https://github.com/cannaseedus-bot/XJSON) | manifest-driven JSON object-server runtime + the sidecar store |
+| [Quantum](https://github.com/cannaseedus-bot/Quantum) | `quantum_trinity` candidate/compute sidecars (emit JSON, never promote) |
 
 ## Status and Scope
 

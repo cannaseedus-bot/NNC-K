@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" width="640" height="180" role="img" aria-label="NNC-K">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1e29"/><stop offset="1" stop-color="#07131b"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="180" rx="16" fill="url(#bg)"/>
+  <rect x="0.5" y="0.5" width="639" height="179" rx="16" fill="none" stroke="#123244"/>
+  <g transform="translate(58,90)" stroke="#a78bfa" stroke-width="3" fill="#a78bfa">
+    <line x1="0" y1="-36" x2="32" y2="0" opacity="0.6"/>
+    <line x1="0" y1="-36" x2="-32" y2="0" opacity="0.6"/>
+    <line x1="-32" y1="0" x2="0" y2="36" opacity="0.6"/>
+    <line x1="32" y1="0" x2="0" y2="36" opacity="0.6"/>
+    <line x1="-32" y1="0" x2="32" y2="0" opacity="0.35"/>
+    <circle cx="0" cy="-36" r="7"/>
+    <circle cx="32" cy="0" r="7"/>
+    <circle cx="-32" cy="0" r="7"/>
+    <circle cx="0" cy="36" r="7" fill="#07131b"/>
+  </g>
+  <text x="146" y="84" font-family="Cascadia Code, JetBrains Mono, Consolas, monospace" font-size="48" font-weight="700" fill="#e8fff4">NNC-K</text>
+  <rect x="148" y="98" width="132" height="3" fill="#a78bfa"/>
+  <text x="150" y="126" font-family="Cascadia Code, Consolas, monospace" font-size="15.5" fill="#7fa8a0">NeuralGrammar.Core — contract-driven neural meta-runtime</text>
+</svg>
