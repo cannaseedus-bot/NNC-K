@@ -16,8 +16,37 @@ K'UHUL defines legal execution
 Micronauts perform bounded capabilities
 models perform inference
 native sidecars perform compute
-the runtime records and governs state
+the runtime validates, records, proves, governs, and promotes state
 ```
+
+## Runtime Authority
+
+The runtime is intentionally divided into three layers:
+
+```
+Pre-forward
+───────────
+Schemas
+Contracts
+XCFE
+K'UHUL
+Micronauts
+
+Forward
+───────────
+Inference Model
+(GPT, Gemma, Qwen, LFM, Custom Runtime)
+
+Post-forward
+─────────────
+Collapse
+Execution lineage (@flux)
+CHEESE
+BossPromotion
+Persistence
+```
+
+Models propose candidate outputs. Runtime components evaluate, record, and govern execution.
 
 ## Architecture
 
@@ -63,6 +92,30 @@ K'UHUL supplies deterministic phase semantics. The common lifecycle is
 `Pop -> Wo -> Yax -> Sek -> Ch'en -> Xul`: establish context, transform or
 route state, resolve it, execute a bounded action, persist an admitted result,
 and close the cycle.
+
+Runtime judgment and promotion occur after Xul and are performed by the runtime rather than by the model. The complete execution lifecycle is:
+
+```
+Pop
+↓
+Wo
+↓
+Yax
+↓
+Sek
+↓
+Ch'en
+↓
+Xul
+↓
+CollapseProof
+↓
+CHEESE
+↓
+@flux
+↓
+BossPromotion
+```
 
 A Micronaut is an addressable runtime actor with a constrained capability,
 state, evidence, and lifecycle. Micronauts may call models or tools, but model
@@ -193,9 +246,15 @@ K'UHUL/Micronaut orchestration
   -> metrics and trace
 ```
 
-The Intel LLVM/OpenCL CPU backend is relevant here: once native OpenCL dispatch
-is wired, it can execute GEMM kernels on the CPU through the OpenCL scheduler.
-That complements the D3D11 GPU sidecar; it is not a language-model choice.
+Compute splits by workload. K'UHUL's semantic / manifold ops (glyphs, folds,
+phases, geodesics, curvature, pressure) run on the CPU via the **XVM 32-fiber
+cluster VM**; dense tensor math (GEMM, attention, MoE) runs on the GPU via
+**DirectML** (`ggml-xcfe`) and **SXME** (D3D12). OpenCL is not a required lane on
+this host — the XVM cluster covers CPU semantic compute and DirectML/SXME cover
+GPU tensor math, squeezing OpenCL out on both ends. The Intel OpenCL CPU runtime
+is present but native dispatch is un-wired: a current `task-run` reports 0
+platforms and the executor path returns `invalid_task_request`. It remains a
+reach lane for non-DirectML hosts, not a compute choice here.
 
 ## Gemma Model Family
 

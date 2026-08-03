@@ -128,28 +128,38 @@ explicit unbinding, staging readback, numerical stability, and the practical
 [ASX RAM Attention](docs/asx-ram-attention.md) and
 [GPT-OSS Shard Bridge](docs/gpt-oss-shard-bridge.md).
 
-### GEMM, OpenCL CPU, and model selection
+### Compute layers, GEMM, and model selection
+
+Compute splits into **two layers by workload**, not a single CPU-vs-GPU choice:
+
+- **Semantic / manifold layer → CPU (XVM cluster).** K'UHUL's geometric ops —
+  glyphs, folds, phases, geodesics, curvature, pressure propagation — run on the
+  **XVM 32-fiber cluster VM** (phase-barrier fibers; manifold opcodes
+  `OP_GEODESIC` / `OP_RIEMANN_CURVATURE` / `OP_FOLD_ENTER` / `OP_PRESSURE_PROPAGATE`).
+  These are not dense matrix math, and a purpose-built fiber-cluster VM beats a
+  generic CPU-kernel lane here. `kuhul-vm` is the reference VM; the native glyph
+  engine and `tools/kuhul3d_execute.py` share the same opcode surface.
+- **Dense-tensor layer → GPU.** GEMM / attention / MoE run on the GPU: DirectML
+  via `ggml-xcfe`, plus SXME (`native/d3d12_compute/sxme_compute.cpp`) for the
+  SCX-MoE forward pass on D3D12.
 
 GEMM is the matrix operation `C = alpha * A * B + beta * C`. The primary,
 GPU-accelerated path is `ggml-xcfe`, which registers a ggml backend and computes
 `MUL_MAT` through **DirectML** — verified against the ggml CPU reference
 (`xcfe_matmul_test`: max abs err ≈ 6e-7; `xcfe_probe` reports the XCFE backend
 registered). `kuhul_engine --providers` confirms `directml`, `xcfe_directml`,
-`d3d11`, and `d3d12` are available on this host. `asx_gemm.exe` is a separate
-specialized D3D11 sidecar for selected MoE expert `.xshard` matrices, not a
-general BLAS GEMM.
+`d3d11`, and `d3d12` are available. `asx_gemm.exe` is a separate specialized
+D3D11 sidecar for selected MoE expert `.xshard` matrices, not a general BLAS GEMM.
 
-OpenCL CPU is a reach/portability fallback, not the primary compute lane. The
-full Intel OpenCL CPU runtime **is present** on this host, but in a driver-package
-directory (`C:\DRIVERS\VDO\...\Gfx\{guid}\`) that is off the default DLL search
-path — which is why a default `--providers` run reports the `ocl_cpu_*` components
-as not found. Point `KUHUL_DRIVER_ROOT` at that directory and `kuhul_engine
---providers` then reports the CPU device, backend, task executor, TBB, and Clang
-compiler as **available** (`opencl_helper` reads `KUHUL_DRIVER_ROOT` for exactly
-this). So the OpenCL CPU device is usable at the runtime level; what remains
-un-wired is the native dispatch path itself — `opencl_helper` currently only
-probes for a device, with no `clCreateProgramWithSource` / `clEnqueueNDRangeKernel`
-GEMM. DirectML via `ggml-xcfe` remains the primary, verified GEMM path.
+OpenCL is **not a required lane on this host.** The XVM cluster covers CPU
+semantic compute and DirectML / SXME cover GPU tensor math, so OpenCL is squeezed
+out on both ends. The Intel OpenCL CPU runtime *is* present (in a driver-package
+directory; point `KUHUL_DRIVER_ROOT` at it and `--providers` finds the CPU
+device / backend / executor / TBB / Clang), but native dispatch is un-wired: when
+tasks are issued (`task-run`) the probe reports 0 platforms and the executor path
+returns `invalid_task_request`. It is a documented reach lane for non-DirectML
+hosts only — not a gap to close here. `task-boss` executes the same task list
+through BOSS + FieldGraph on the CPU fallback today.
 
 Gemma is a separate model family. Local Gemma GGUF models are downloaded from
 Hugging Face rather than stored in this repository. Verified repositories:
